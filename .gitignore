@@ -44,3 +44,5 @@ backups/
 /test.epub
 /test.pdf
 /trading_psychology.txt
+# Git worktrees
+.worktrees/
