@@ -51,7 +51,7 @@ The new chunker should still split text at sentence boundaries first, then group
 Proposed defaults:
 
 ```text
-mode: packed
+mode: sentence by default; packed only with AUDIOBOOK_CHUNK_MODE=packed
 TARGET_CHARS: 800
 MAX_CHARS: 1200
 MIN_CHARS: 120
@@ -67,10 +67,10 @@ Rules:
 - Remove empty chunks.
 - Keep behavior deterministic.
 
-Rollback behavior:
+Default and rollback behavior:
 
 ```text
-AUDIOBOOK_CHUNK_MODE=sentence
+AUDIOBOOK_CHUNK_MODE unset or AUDIOBOOK_CHUNK_MODE=sentence
 ```
 
 Optimized behavior:
@@ -79,7 +79,7 @@ Optimized behavior:
 AUDIOBOOK_CHUNK_MODE=packed
 ```
 
-The default can remain `packed` after tests pass because it preserves public behavior and only changes how we feed Kokoro internally.
+Benchmark results on the local RTX 4070 sample reduced outer chunks but did not materially improve wall time or RTF, and packed mode reduces progress update granularity. Keep packed mode implemented as opt-in; absent env uses sentence mode.
 
 ## Benchmark Design
 

@@ -14,7 +14,7 @@ from typing import Any
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_CHUNK_MODE = "packed"
+DEFAULT_CHUNK_MODE = "sentence"
 DEFAULT_TARGET_CHARS = 800
 DEFAULT_MAX_CHARS = 1200
 SMOKE_SENTENCE = "This is a short local TTS benchmark sentence."

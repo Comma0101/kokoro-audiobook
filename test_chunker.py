@@ -107,7 +107,23 @@ def test_no_empty_chunks_from_messy_spacing():
     assert all(chunk.strip() for chunk in chunks)
 
 
-def test_absent_env_defaults_to_packed_target_800_max_1200():
+def test_absent_env_defaults_to_sentence_rollback_behavior():
+    first = "Alpha   keeps\tinternal spacing."
+    long_sentence = "x" * 1250
+    text = f"  {first} {long_sentence}  "
+
+    with patched_env(
+        AUDIOBOOK_CHUNK_MODE=None,
+        AUDIOBOOK_CHUNK_TARGET_CHARS=None,
+        AUDIOBOOK_CHUNK_MAX_CHARS=None,
+    ):
+        chunks = chunk_text(text)
+
+    assert chunks == [first, long_sentence]
+    assert len(chunks[1]) > 1200
+
+
+def test_packed_env_defaults_to_target_800_max_1200():
     short_text = "Alpha. Beta! Gamma?"
     target_first = "a" * 399 + "."
     target_exact_second = "b" * 398 + "."
@@ -120,7 +136,7 @@ def test_absent_env_defaults_to_packed_target_800_max_1200():
     assert len(target_over_text) == 801
 
     with patched_env(
-        AUDIOBOOK_CHUNK_MODE=None,
+        AUDIOBOOK_CHUNK_MODE="packed",
         AUDIOBOOK_CHUNK_TARGET_CHARS=None,
         AUDIOBOOK_CHUNK_MAX_CHARS=None,
     ):
@@ -210,7 +226,8 @@ def run_tests():
     test_long_unpunctuated_text_splits_safely()
     test_long_no_space_text_prefers_punctuation_before_raw_split()
     test_no_empty_chunks_from_messy_spacing()
-    test_absent_env_defaults_to_packed_target_800_max_1200()
+    test_absent_env_defaults_to_sentence_rollback_behavior()
+    test_packed_env_defaults_to_target_800_max_1200()
     test_env_default_mode_can_be_sentence()
     test_env_default_mode_can_be_packed()
     test_env_target_chars_are_honored_in_packed_mode()

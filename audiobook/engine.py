@@ -91,7 +91,7 @@ def generate_audiobook(source_input: str, out_dir: Path, voice: str = "af_heart"
         chunks = chunk_text(chapter_text)
         chunk_chars = sum(len(chunk) for chunk in chunks)
         max_chunk_chars = max((len(chunk) for chunk in chunks), default=0)
-        chunk_mode = os.environ.get("AUDIOBOOK_CHUNK_MODE", "packed").strip().lower()
+        chunk_mode = os.environ.get("AUDIOBOOK_CHUNK_MODE", "sentence").strip().lower()
 
         if progress_cb:
             progress_cb(stage="chapter_info", index=i, total=total_chapters, title=chapter.title,

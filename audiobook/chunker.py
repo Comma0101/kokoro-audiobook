@@ -40,7 +40,7 @@ def chunk_text(text: str, *, mode=None, target_chars=None, max_chars=None) -> li
 
 def _resolve_mode(mode):
     if mode is None:
-        mode = os.environ.get("AUDIOBOOK_CHUNK_MODE", "packed")
+        mode = os.environ.get("AUDIOBOOK_CHUNK_MODE", "sentence")
     return str(mode).strip().lower()
 
 

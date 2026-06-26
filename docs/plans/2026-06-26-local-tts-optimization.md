@@ -95,7 +95,7 @@ Implementation requirements:
 - Keep `chunk_text(text)` as the public function.
 - Add optional keyword args: `mode=None`, `target_chars=None`, `max_chars=None`.
 - Read defaults from environment:
-  - `AUDIOBOOK_CHUNK_MODE`, default `packed`
+  - `AUDIOBOOK_CHUNK_MODE`, default `sentence` (packed is opt-in after benchmark evidence)
   - `AUDIOBOOK_CHUNK_TARGET_CHARS`, default `800`
   - `AUDIOBOOK_CHUNK_MAX_CHARS`, default `1200`
 - Support `mode="sentence"` for rollback.
@@ -176,7 +176,7 @@ def _pack_chunks(pieces: list[str], target_chars: int, max_chars: int) -> list[s
 
 
 def chunk_text(text: str, *, mode: str | None = None, target_chars: int | None = None, max_chars: int | None = None) -> list[str]:
-    mode = (mode or os.getenv("AUDIOBOOK_CHUNK_MODE", "packed")).strip().lower()
+    mode = (mode or os.getenv("AUDIOBOOK_CHUNK_MODE", "sentence")).strip().lower()
     target = target_chars or _env_int("AUDIOBOOK_CHUNK_TARGET_CHARS", 800)
     maximum = max_chars or _env_int("AUDIOBOOK_CHUNK_MAX_CHARS", 1200)
     maximum = max(maximum, 80)
