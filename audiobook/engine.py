@@ -1,3 +1,4 @@
+import os
 import time
 import json
 from pathlib import Path
@@ -88,10 +89,15 @@ def generate_audiobook(source_input: str, out_dir: Path, voice: str = "af_heart"
             chapter_text = strip_non_latin(chapter_text)
 
         chunks = chunk_text(chapter_text)
+        chunk_chars = sum(len(chunk) for chunk in chunks)
+        max_chunk_chars = max((len(chunk) for chunk in chunks), default=0)
+        chunk_mode = os.environ.get("AUDIOBOOK_CHUNK_MODE", "packed").strip().lower()
 
         if progress_cb:
             progress_cb(stage="chapter_info", index=i, total=total_chapters, title=chapter.title,
-                        total_chunks=len(chunks), lang=ch_lang, voice=ch_voice)
+                        total_chunks=len(chunks), chunk_chars=chunk_chars,
+                        max_chunk_chars=max_chunk_chars, chunk_mode=chunk_mode,
+                        lang=ch_lang, voice=ch_voice)
 
         def _on_chunk(chunks_done, total_chunks, audio_seconds, _i=i):
             if progress_cb:

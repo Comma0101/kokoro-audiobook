@@ -208,6 +208,7 @@ async def worker():
             progress_dict = {
                 "title": "", "chapters_done": 0, "chapter_index": 0, "total_chapters": 0,
                 "total_chunks": 0, "chunks_done": 0, "audio_seconds": 0, "total_audio_seconds": 0,
+                "chunk_chars": 0, "max_chunk_chars": 0, "chunk_mode": "",
                 "lang": "", "voice": "", "percent": 0
             }
             
@@ -220,6 +221,9 @@ async def worker():
                 elif stage == "chapter_info":
                     p["total_chunks"] = kwargs.get("total_chunks", 0)
                     p["chunks_done"] = 0
+                    p["chunk_chars"] = kwargs.get("chunk_chars", 0)
+                    p["max_chunk_chars"] = kwargs.get("max_chunk_chars", 0)
+                    p["chunk_mode"] = kwargs.get("chunk_mode", "")
                     p["lang"] = kwargs.get("lang", "")
                     p["voice"] = kwargs.get("voice", "")
                 elif stage == "chapter_progress":
