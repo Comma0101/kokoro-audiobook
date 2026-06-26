@@ -1,0 +1,1659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Listen</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:wght@600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/alpinejs@3.13.3/dist/cdn.min.js" defer></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        serif: ['Fraunces', 'Georgia', 'serif']
+                    },
+                    colors: {
+                        paper: '#FAF7F0',
+                        paperDark: '#FFFCF7',
+                        ink: '#211A1D',
+                        inkLight: '#6F6A63',
+                        accent: '#6B8E3E',
+                        danger: '#B42318',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --color-bg: #FAF7F0;
+            --color-surface: #FFFFFF;
+            --color-surface-warm: #FFFCF7;
+            --color-text: #211A1D;
+            --color-text-muted: #6F6A63;
+            --color-text-soft: #9A948A;
+            --color-border: #E5DED2;
+            --color-primary: #24191D;
+            --color-primary-hover: #37282E;
+            --color-accent: #6B8E3E;
+            --color-danger: #B42318;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+            --shadow-card: 0 12px 32px rgba(33, 26, 29, 0.08);
+            --shadow-soft: 0 4px 16px rgba(33, 26, 29, 0.06);
+            --container-width: 960px;
+            --header-height: 72px;
+        }
+
+        body { 
+            overscroll-behavior-y: none; 
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background: var(--color-bg);
+            color: var(--color-text);
+        }
+
+        [class*="tracking-"] { letter-spacing: 0 !important; }
+        button, input, textarea, select { font: inherit; }
+        button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, [role="button"]:focus-visible {
+            outline: 2px solid var(--color-accent);
+            outline-offset: 3px;
+        }
+
+        .brand-mark {
+            width: 32px; height: 32px; border-radius: 10px;
+            background: var(--color-primary); color: var(--color-surface-warm);
+            display: inline-flex; align-items: center; justify-content: center;
+        }
+        .nav-link {
+            min-height: 44px; padding: 0 12px; border-radius: 999px;
+            color: var(--color-text-muted); transition: color .2s ease, background .2s ease;
+        }
+        .nav-link.active { color: var(--color-text); background: rgba(33, 26, 29, .06); }
+        .nav-link.active::after {
+            content: ''; position: absolute; bottom: 5px; left: 14px; right: 14px; height: 1px; background: var(--color-text);
+        }
+        .nav-link:hover { color: var(--color-text); background: rgba(33, 26, 29, .05); }
+
+        .page-scroll { height: 100%; overflow-y: auto; padding: 40px 24px 96px; }
+        .page-container { width: min(100%, var(--container-width)); margin: 0 auto; }
+        .create-container { width: min(100%, 840px); }
+        .create-copy-mobile { display: none; }
+        .page-kicker, .field-label {
+            color: var(--color-text-muted); font-size: 12px; font-weight: 700;
+            line-height: 1.2; text-transform: uppercase; letter-spacing: 0;
+        }
+        .surface-card {
+            background: var(--color-surface-warm); border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg); box-shadow: var(--shadow-soft);
+        }
+        .method-tabs {
+            display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px;
+            padding: 6px; border: 1px solid var(--color-border); border-radius: 999px;
+            background: rgba(255, 252, 247, .72);
+        }
+        .method-tab {
+            min-height: 44px; border-radius: 999px; color: var(--color-text-muted);
+            font-size: 14px; font-weight: 700; transition: background .2s ease, color .2s ease, box-shadow .2s ease;
+        }
+        .method-tab.active {
+            background: var(--color-primary); color: var(--color-surface-warm); box-shadow: var(--shadow-soft);
+        }
+        .field-control {
+            width: 100%; min-height: 48px; border: 1px solid var(--color-border);
+            border-radius: var(--radius-md); background: #fff; color: var(--color-text);
+            padding: 12px 14px; transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+        }
+        .field-control::placeholder { color: var(--color-text-soft); }
+        .field-control:focus {
+            outline: none; border-color: var(--color-accent);
+            box-shadow: 0 0 0 3px rgba(107, 142, 62, .16);
+        }
+        .textarea-control { min-height: 220px; resize: vertical; line-height: 1.65; }
+        .upload-zone {
+            min-height: 220px; border: 1.5px dashed #CFC6B7; border-radius: var(--radius-lg);
+            background: rgba(255,255,255,.54); display: flex; flex-direction: column;
+            align-items: center; justify-content: center; text-align: center; padding: 28px;
+            cursor: pointer; transition: border-color .2s ease, background .2s ease, transform .2s ease;
+        }
+        .upload-zone:hover, .upload-zone.dragging {
+            border-color: var(--color-accent); background: #fff; transform: translateY(-1px);
+        }
+        .upload-icon {
+            width: 44px; height: 44px; border-radius: 14px; background: rgba(107,142,62,.10);
+            color: var(--color-accent); display: inline-flex; align-items: center; justify-content: center;
+        }
+        .selected-file {
+            display: flex; align-items: center; justify-content: space-between; gap: 16px;
+            border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+            background: #fff; padding: 18px;
+        }
+        .settings-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, .7fr); gap: 20px; }
+        .settings-summary {
+            width: 100%; min-height: 48px; display: none; align-items: center; justify-content: space-between; gap: 14px;
+            text-align: left; border: 1px solid var(--color-border); border-radius: var(--radius-md);
+            background: #fff; padding: 12px 14px;
+        }
+        .speed-control {
+            display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px;
+            padding: 6px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: #fff;
+        }
+        .speed-option {
+            min-height: 40px; border-radius: var(--radius-sm); color: var(--color-text-muted);
+            font-size: 13px; font-weight: 700;
+        }
+        .speed-option.active { background: var(--color-primary); color: var(--color-surface-warm); }
+        .checkbox-option {
+            display: flex; align-items: flex-start; gap: 12px; min-height: 44px; cursor: pointer;
+        }
+        .checkbox-box {
+            position: relative;
+            width: 20px; height: 20px; border: 1px solid var(--color-border); border-radius: 5px;
+            background: #fff; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
+        }
+        .primary-button {
+            min-height: 52px; border-radius: var(--radius-md); background: var(--color-primary);
+            color: var(--color-surface-warm); font-size: 14px; font-weight: 700;
+            transition: background .2s ease, transform .2s ease, opacity .2s ease;
+        }
+        .primary-button:hover:not(:disabled) { background: var(--color-primary-hover); transform: translateY(-1px); }
+        .primary-button:active:not(:disabled) { transform: translateY(0); }
+        .primary-button:disabled { opacity: .45; cursor: not-allowed; }
+        .mobile-sticky-create { display: block; }
+        .progress-card { border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: #fff; padding: 18px; }
+        .progress-bar { height: 6px; border-radius: 999px; overflow: hidden; background: #E9E1D5; }
+        .progress-bar span { display: block; height: 100%; width: 62%; background: var(--color-accent); animation: pulseWidth 1.8s ease-in-out infinite; }
+        @keyframes pulseWidth { 0%, 100% { width: 38%; } 50% { width: 76%; } }
+        .search-input { padding-left: 42px; }
+        .library-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 22px; }
+        .audiobook-card {
+            border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+            background: var(--color-surface); box-shadow: var(--shadow-soft); overflow: hidden;
+            transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+        }
+        .audiobook-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-card); border-color: #D9D0C3; }
+        .cue-container {
+            mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
+        }
+        .cue { 
+            transition: color 0.3s ease, opacity 0.3s ease; 
+            cursor: pointer; display: inline; line-height: 1.8; opacity: 0.4; color: theme('colors.ink');
+        }
+        .cue:hover { opacity: 0.7; }
+        .cue-active { opacity: 1; font-weight: 600; }
+
+        audio { border-radius: 0; height: 40px; }
+        audio::-webkit-media-controls-enclosure { background-color: transparent; border-radius: 0; }
+        
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #ddd; }
+        ::-webkit-scrollbar-thumb:hover { background: #aaa; }
+
+        header, main { position: relative; z-index: 1; }
+
+        .book-cover {
+            position: relative; aspect-ratio: 3 / 4; width: 100%; overflow: hidden;
+            border-radius: var(--radius-md); border: 1px solid rgba(33,26,29,.08);
+            box-shadow: inset 0 1px rgba(255,255,255,.45);
+        }
+        .book-cover::before {
+            content: ''; position: absolute; inset: 0; pointer-events: none;
+            background: linear-gradient(120deg, rgba(255,255,255,.46) 0%, transparent 34%),
+                        linear-gradient(to bottom, rgba(255,255,255,.12), transparent 58%, rgba(33,26,29,.14));
+        }
+        .cover-waveform {
+            position: absolute; z-index: 2; left: 16px; top: 16px; width: 42px; height: 42px;
+            border-radius: 14px; background: rgba(255,255,255,.34); color: rgba(33,26,29,.72);
+            display: inline-flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);
+        }
+        .cover-title {
+            position: absolute; z-index: 3; left: 16px; right: 16px; bottom: 44px;
+            font-family: 'Fraunces', Georgia, serif;
+            color: rgba(33,26,29,.92); line-height: 1.12; letter-spacing: 0;
+            display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
+        }
+        .status-badge {
+            display: inline-flex; align-items: center; min-height: 26px; padding: 0 9px;
+            border-radius: 999px; border: 1px solid var(--color-border); background: #fff;
+            color: var(--color-text-muted); font-size: 12px; font-weight: 700;
+        }
+        .status-ready { color: var(--color-accent); border-color: rgba(107,142,62,.26); background: rgba(107,142,62,.08); }
+        .status-processing { color: #8A5A22; border-color: rgba(154,106,58,.24); background: rgba(154,106,58,.08); }
+        .status-failed { color: var(--color-danger); border-color: rgba(180,35,24,.24); background: rgba(180,35,24,.08); }
+        .card-action {
+            min-height: 42px; border-radius: var(--radius-md); border: 1px solid var(--color-border);
+            font-size: 13px; font-weight: 700; transition: background .2s ease, color .2s ease, border-color .2s ease;
+        }
+        .card-action.primary { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-surface-warm); }
+        .card-action.primary:hover { background: var(--color-primary-hover); }
+        .card-action.secondary { color: var(--color-text-muted); background: #fff; }
+        .card-action.secondary:hover { color: var(--color-text); border-color: #CFC6B7; }
+        .toast {
+            border: 1px solid var(--color-border); background: var(--color-surface);
+            border-radius: var(--radius-lg); box-shadow: var(--shadow-card);
+        }
+
+        /* --- Reader: ink brush highlight on the active line --- */
+        .cue-active {
+            opacity: 1 !important; font-weight: 600; color: theme('colors.ink');
+            background-image: linear-gradient(100deg, rgba(90,164,174,0) 0%, rgba(90,164,174,.26) 11%, rgba(90,164,174,.26) 89%, rgba(90,164,174,0) 100%);
+            border-radius: 3px;
+            -webkit-box-decoration-break: clone; box-decoration-break: clone;
+        }
+
+        @media (max-width: 720px) {
+            .page-scroll { padding: 24px 16px 88px; }
+            .create-shell { padding-bottom: calc(104px + env(safe-area-inset-bottom)); }
+            .create-shell h2 { font-size: 34px; line-height: 1.06; margin-bottom: 10px; }
+            .create-copy-desktop { display: none; }
+            .create-copy-mobile { display: block; }
+            .create-form { gap: 16px; }
+            .method-tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); border-radius: 999px; gap: 6px; padding: 5px; position: sticky; top: 82px; z-index: 5; }
+            .method-tab { border-radius: 999px; min-height: 42px; font-size: 13px; }
+            .surface-card { border-radius: var(--radius-md); }
+            .upload-zone { min-height: 156px; padding: 20px; }
+            .upload-icon { width: 38px; height: 38px; border-radius: 12px; margin-bottom: 12px; }
+            .textarea-control { min-height: 180px; }
+            .settings-summary { display: flex; }
+            .settings-heading { display: none; }
+            .settings-body { margin-top: 16px; }
+            .settings-grid { grid-template-columns: 1fr; }
+            .selected-file { align-items: flex-start; flex-direction: column; padding: 14px; }
+            .selected-file-actions { width: 100%; display: grid; grid-template-columns: 1fr 1fr; }
+            .mobile-sticky-create {
+                display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+                padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+                background: rgba(250, 247, 240, .94); border-top: 1px solid rgba(33, 26, 29, .08);
+                backdrop-filter: blur(12px);
+            }
+            .library-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body x-data="appData()" x-init="init()" class="h-screen flex flex-col font-sans bg-paper text-ink">
+
+    <header class="h-[72px] px-4 sm:px-6 flex justify-between items-center z-10 sticky top-0 bg-paper/90 backdrop-blur-sm border-b border-ink/5">
+        <h1 class="text-xl font-semibold text-ink flex items-center gap-3">
+            <span class="brand-mark" aria-hidden="true">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 5.5c2.6-.7 4.7-.4 7 1.2 2.3-1.6 4.4-1.9 7-1.2v13c-2.6-.7-4.7-.4-7 1.2-2.3-1.6-4.4-1.9-7-1.2v-13Z"/>
+                    <path stroke-linecap="round" d="M8.2 12.4c.7-1.4 1.3-1.4 2 0s1.3 1.4 2 0 1.3-1.4 2 0 1.3 1.4 2 0"/>
+                </svg>
+            </span>
+            <span>Listen</span>
+        </h1>
+        <div class="flex gap-3 font-semibold text-sm">
+            <template x-if="currentUser">
+                <div class="flex gap-2 sm:gap-3 items-center">
+                    <button @click="view = 'submit'" class="nav-link" :class="view === 'submit' ? 'active' : ''">Create</button>
+                    <button @click="view = 'library'" class="nav-link" :class="view === 'library' ? 'active' : ''">Library</button>
+                    <button @click="profileOpen = true" class="w-10 h-10 rounded-full bg-ink text-paper flex items-center justify-center hover:bg-accent transition-colors overflow-hidden" aria-label="Open profile">
+                        <template x-if="currentUser.avatar_url">
+                            <img :src="currentUser.avatar_url" referrerpolicy="no-referrer" class="w-full h-full object-cover">
+                        </template>
+                        <template x-if="!currentUser.avatar_url">
+                            <span class="text-sm font-semibold" x-text="(currentUser.display_name || currentUser.email || 'U')[0].toUpperCase()"></span>
+                        </template>
+                    </button>
+                </div>
+            </template>
+        </div>
+    </header>
+
+    <main class="flex-1 overflow-hidden relative">
+        
+        <!-- Auth View -->
+        <div x-show="view === 'auth'" class="page-scroll flex items-center">
+            <section class="page-container create-container">
+                <div class="grid md:grid-cols-[1.05fr_.95fr] gap-8 md:gap-12 items-center">
+                    <div>
+                        <p class="page-kicker mb-3">Create</p>
+                        <h2 class="text-4xl md:text-5xl font-serif leading-tight mb-4">Start creating audiobooks</h2>
+                        <p class="text-base md:text-lg text-inkLight leading-relaxed">Turn documents, articles, and pasted text into listenable audio.</p>
+                    </div>
+
+                    <div class="surface-card p-5 md:p-6">
+                        <h3 class="text-xl font-semibold text-ink">Sign in</h3>
+                        <p class="mt-1 mb-5 text-sm text-inkLight">Save your generated audiobooks and offline device copies.</p>
+                        
+                        <div class="space-y-3">
+                            <button @click="loginWithGoogle()" class="card-action secondary w-full flex items-center justify-center gap-3 px-4">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24"><path fill="currentColor" d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.761H12.545z"/></svg>
+                        Continue with Google
+                            </button>
+                            
+                            <button @click="loginWithPhone()" class="card-action secondary w-full flex items-center justify-center gap-3 px-4">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                        Continue with Phone
+                            </button>
+                            
+                            <div id="recaptcha-container"></div>
+                        </div>
+
+                        <div x-show="authError"
+                             x-transition
+                             style="display:none"
+                             class="mt-4 rounded-lg border border-danger/20 bg-danger/5 p-4">
+                            <p class="text-sm font-semibold text-danger" x-text="authError?.title"></p>
+                            <p class="mt-1 text-sm text-inkLight" x-text="authError?.detail"></p>
+                            <template x-if="authError?.href">
+                                <a :href="authError.href" class="card-action secondary mt-3 inline-flex items-center px-4">Open http://localhost:8000</a>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Submit View -->
+        <div x-show="view === 'submit'" class="page-scroll" style="display:none">
+            <section class="page-container create-container create-shell">
+                <div class="mb-8">
+                    <p class="page-kicker mb-3">Create</p>
+                    <h2 class="text-4xl md:text-5xl font-serif leading-tight mb-4">Create an audiobook</h2>
+                    <p class="create-copy-desktop text-base md:text-lg text-inkLight leading-relaxed max-w-2xl">Upload a document, paste text, or add an article URL. We’ll turn it into natural narration.</p>
+                    <p class="create-copy-mobile text-base text-inkLight leading-relaxed">Upload, paste, or add a link.</p>
+                </div>
+
+                <form @submit.prevent="submitJob" class="create-form space-y-6">
+                    <div class="method-tabs" role="tablist" aria-label="Choose input method">
+                        <button type="button" class="method-tab" :class="inputMethod === 'upload' ? 'active' : ''" @click="setInputMethod('upload')" aria-label="Upload File">Upload</button>
+                        <button type="button" class="method-tab" :class="inputMethod === 'text' ? 'active' : ''" @click="setInputMethod('text')" aria-label="Paste Text">Paste</button>
+                        <button type="button" class="method-tab" :class="inputMethod === 'url' ? 'active' : ''" @click="setInputMethod('url')" aria-label="Article URL">URL</button>
+                    </div>
+
+                    <div class="surface-card p-5 md:p-6">
+                        <template x-if="inputMethod === 'url'">
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="articleUrl" class="field-label block mb-2">Article URL</label>
+                                    <input id="articleUrl" type="url" x-model="jobForm.url" placeholder="https://example.com/article" class="field-control">
+                                </div>
+                                <p class="text-sm text-inkLight">Paste a public article, essay, newsletter, or web page.</p>
+                                <p x-show="jobForm.url" class="text-sm font-semibold text-accent">Ready to import article</p>
+                            </div>
+                        </template>
+
+                        <template x-if="inputMethod === 'upload'">
+                            <div class="space-y-4">
+                                <div>
+                                    <p class="field-label mb-2">Upload document</p>
+                                    <input x-ref="fileInput" id="fileInput" type="file" accept=".pdf,.epub,.txt,.docx,application/pdf,text/plain" class="sr-only" @change="handleFileSelect($event)">
+                                    <div x-show="!selectedFileName"
+                                         class="upload-zone"
+                                         :class="uploadDrag ? 'dragging' : ''"
+                                         role="button"
+                                         tabindex="0"
+                                         @click="$refs.fileInput.click()"
+                                         @keydown.enter.prevent="$refs.fileInput.click()"
+                                         @keydown.space.prevent="$refs.fileInput.click()"
+                                         @dragover.prevent="uploadDrag = true"
+                                         @dragleave.prevent="uploadDrag = false"
+                                         @drop.prevent="handleFileDrop($event)">
+                                        <span class="upload-icon mb-4" aria-hidden="true">
+                                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 0 4 4m-4-4-4 4"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16.5V18a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1.5"/>
+                                            </svg>
+                                        </span>
+                                        <p class="text-lg font-semibold text-ink">
+                                            <span class="hidden sm:inline">Drop a file here or click to browse</span>
+                                            <span class="sm:hidden">Tap to browse files</span>
+                                        </p>
+                                        <p class="mt-2 text-sm text-inkLight">Supported: PDF, EPUB, TXT, DOCX</p>
+                                    </div>
+                                    <div x-show="selectedFileName" class="selected-file" style="display:none">
+                                        <div>
+                                            <p class="text-sm font-semibold text-accent mb-1">Document uploaded</p>
+                                            <p class="text-base font-semibold text-ink" x-text="selectedFileName"></p>
+                                            <p class="text-sm text-inkLight" x-text="selectedFileSize ? formatBytes(selectedFileSize) : ''"></p>
+                                        </div>
+                                        <div class="selected-file-actions flex gap-2">
+                                            <button type="button" class="card-action secondary px-4" @click="replaceSelectedFile()">Replace file</button>
+                                            <button type="button" class="card-action secondary px-4" @click="clearSelectedFile()">Remove</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="text-sm text-inkLight">Only upload content you own or have permission to convert.</p>
+                            </div>
+                        </template>
+
+                        <template x-if="inputMethod === 'text'">
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="pastedText" class="field-label block mb-2">Paste text</label>
+                                    <textarea id="pastedText" x-model="jobForm.text" placeholder="Add an article, essay, chapter, report, script, or manuscript." class="field-control textarea-control"></textarea>
+                                </div>
+                                <p x-show="!jobForm.text" class="text-sm text-inkLight">Paste any text-based content you want converted into narration.</p>
+                                <p x-show="jobForm.text" class="text-sm font-semibold text-accent" x-text="`${jobForm.text.length.toLocaleString()} characters · estimated ${estimateTextDuration(jobForm.text)}`"></p>
+                            </div>
+                        </template>
+                    </div>
+
+                    <div class="surface-card p-5 md:p-6 space-y-5">
+                        <button type="button" class="settings-summary" @click="settingsCollapsed = !settingsCollapsed" :aria-expanded="(!settingsCollapsed).toString()">
+                            <span>
+                                <span class="block text-sm font-semibold text-ink">Narration</span>
+                                <span class="block text-xs text-inkLight mt-1">Voice, speed, and cleanup</span>
+                            </span>
+                            <span class="text-right text-sm font-semibold text-ink" x-text="`${voiceLabel(jobForm.voice)} · ${Number(jobForm.speed).toFixed(1)}x`"></span>
+                        </button>
+
+                        <div class="settings-heading">
+                            <h3 class="text-xl font-semibold text-ink">Narration settings</h3>
+                            <p class="mt-1 text-sm text-inkLight">Choose the narration style and pacing for this audiobook.</p>
+                        </div>
+
+                        <div class="settings-body" x-show="!settingsCollapsed">
+                            <div class="settings-grid">
+                                <div>
+                                    <label for="voiceSelect" class="field-label block mb-2">Voice</label>
+                                    <select id="voiceSelect" x-model="jobForm.voice" class="field-control cursor-pointer">
+                                        <option value="af_heart">Ava — Warm female voice</option>
+                                        <option value="am_adam">Noah — Clear male voice</option>
+                                        <option value="af_sky">Emma — Calm narrator</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <p class="field-label mb-2">Speed</p>
+                                    <div class="speed-control" role="radiogroup" aria-label="Narration speed">
+                                        <button type="button" class="speed-option" :class="Number(jobForm.speed) === 0.8 ? 'active' : ''" @click="jobForm.speed = 0.8">0.8x</button>
+                                        <button type="button" class="speed-option" :class="Number(jobForm.speed) === 1.0 ? 'active' : ''" @click="jobForm.speed = 1.0">1.0x</button>
+                                        <button type="button" class="speed-option" :class="Number(jobForm.speed) === 1.2 ? 'active' : ''" @click="jobForm.speed = 1.2">1.2x</button>
+                                        <button type="button" class="speed-option" :class="Number(jobForm.speed) === 1.5 ? 'active' : ''" @click="jobForm.speed = 1.5">1.5x</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <label class="checkbox-option mt-5">
+                                <span class="checkbox-box">
+                                    <input type="checkbox" x-model="jobForm.normalize" class="peer absolute opacity-0 w-5 h-5 cursor-pointer">
+                                    <svg class="w-3.5 h-3.5 text-accent opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
+                                </span>
+                                <span>
+                                    <span class="block text-sm font-semibold text-ink">Read numbers and currency naturally</span>
+                                    <span class="block text-sm text-inkLight mt-1">Example: $50,000 becomes “fifty thousand dollars.”</span>
+                                </span>
+                            </label>
+                        </div>
+
+                    </div>
+
+                    <div x-show="submitting" class="progress-card" style="display:none">
+                        <div class="flex items-start justify-between gap-4 mb-4">
+                            <div>
+                                <h3 class="text-base font-semibold text-ink">Creating your audiobook</h3>
+                                <p class="mt-1 text-sm text-inkLight">You can leave this page. We’ll save it to your Library when it’s ready.</p>
+                            </div>
+                            <span class="status-badge status-processing">Working</span>
+                        </div>
+                        <div class="progress-bar mb-4"><span></span></div>
+                        <div class="grid sm:grid-cols-4 gap-2 text-sm text-inkLight">
+                            <span>Extracting text</span>
+                            <span>Preparing chapters</span>
+                            <span>Generating narration</span>
+                            <span>Finalizing audiobook</span>
+                        </div>
+                    </div>
+
+                    <div class="mobile-sticky-create">
+                        <button type="submit" class="primary-button w-full" :disabled="submitting || !canSubmit()">
+                            <span x-text="submitting ? 'Creating audiobook...' : 'Create Audiobook'"></span>
+                        </button>
+                    </div>
+                </form>
+            </section>
+        </div>
+
+        <!-- Library View -->
+        <div x-show="view === 'library'" class="page-scroll" style="display:none">
+            <section class="page-container">
+                <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5 mb-6">
+                    <div>
+                        <p class="page-kicker mb-3">Library</p>
+                        <h2 class="text-4xl md:text-5xl font-serif leading-tight">Library</h2>
+                        <p class="text-base text-inkLight mt-2">Your generated audiobooks.</p>
+                    </div>
+                    <button @click="view='submit'" class="primary-button px-5">+ New Audiobook</button>
+                </div>
+
+                <div class="relative mb-8">
+                    <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-inkLight" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.3-4.3M10.8 18a7.2 7.2 0 1 1 0-14.4 7.2 7.2 0 0 1 0 14.4Z"/>
+                    </svg>
+                    <label for="librarySearch" class="sr-only">Search library</label>
+                    <input id="librarySearch" type="search" x-model="searchQuery" placeholder="Search audiobooks" class="field-control search-input">
+                </div>
+
+                <div x-show="jobs.length > 0" class="library-grid">
+                    <template x-for="job in filteredJobs()" :key="job.id">
+                        <article class="audiobook-card group">
+                            <div class="p-3">
+                                <div class="book-cover cursor-pointer" :style="coverStyle(job.title)" @click="if(job.status==='ready') openPlayer(job)">
+                                    <div class="cover-waveform" aria-hidden="true">
+                                        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                            <path stroke-linecap="round" d="M4 13v-2m4 5V8m4 11V5m4 9v-4m4 6V8"/>
+                                        </svg>
+                                    </div>
+                                    <div class="cover-title text-xl" x-text="job.title"></div>
+
+                                    <template x-if="job.status==='processing' || job.status==='queued'">
+                                        <div class="absolute inset-0 z-[5] bg-white/70 backdrop-blur-sm flex flex-col items-center justify-center text-ink">
+                                            <span class="font-serif text-3xl tabular-nums" x-text="`${(job.progress && job.progress.percent) || 0}%`"></span>
+                                            <span class="text-xs font-bold mt-2" x-text="bookStatusLabel(job)"></span>
+                                        </div>
+                                    </template>
+                                    <template x-if="job.status==='failed'">
+                                        <div class="absolute inset-0 z-[5] bg-white/80 flex items-center justify-center">
+                                            <span class="status-badge status-failed">Failed</span>
+                                        </div>
+                                    </template>
+
+                                    <button @click.stop="deleteJob(job.id)" class="absolute z-[6] top-3 right-3 w-9 h-9 rounded-full bg-white/85 text-ink flex items-center justify-center opacity-0 hover:bg-danger hover:text-white focus:opacity-100 group-hover:opacity-100 transition-all" title="Delete audiobook" aria-label="Delete audiobook">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"></path></svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="px-4 pb-4">
+                                <div class="flex items-center justify-between gap-3 mb-3">
+                                    <span class="status-badge" :class="statusClass(job)" x-text="bookStatusLabel(job)"></span>
+                                    <span class="text-xs text-inkLight" x-text="createdLabel(job)"></span>
+                                </div>
+                                <h3 class="text-lg font-semibold text-ink leading-snug line-clamp-2" x-text="job.title"></h3>
+                                <p class="mt-1 text-sm text-inkLight" x-text="sourceLabel(job)"></p>
+                                <div class="flex flex-wrap items-center gap-2 mt-3 text-sm text-inkLight tabular-nums">
+                                    <span x-show="job.status==='ready' && job.duration_seconds" x-text="formatDuration(job.duration_seconds)"></span>
+                                    <span x-show="job.status==='ready' && job.duration_seconds && job.total_bytes" class="w-1 h-1 rounded-full bg-ink/25"></span>
+                                    <span x-show="job.status==='ready' && job.total_bytes" x-text="formatBytes(job.total_bytes)"></span>
+                                    <span x-show="job.status!=='ready'" x-text="job.progress && job.progress.stage ? job.progress.stage.replaceAll('_', ' ') : 'Waiting for narration'"></span>
+                                </div>
+                                <p class="mt-2 text-sm text-inkLight" x-text="job.device_state || (job.status === 'ready' ? 'Cloud copy available' : '')"></p>
+                                <p x-show="positionSummary(job) || progressLabel(job)" class="mt-1 text-sm font-medium text-accent" x-text="positionSummary(job) || progressLabel(job)"></p>
+                                <p x-show="job.status === 'failed'" class="mt-2 text-sm text-inkLight" x-text="failureDetail(job)"></p>
+
+                                <div class="grid gap-2 mt-4">
+                                    <button type="button"
+                                            class="card-action primary w-full"
+                                            :disabled="job.status === 'queued' || job.status === 'processing'"
+                                            @click.stop="handleCardPrimaryAction(job)"
+                                            x-text="bookCardActionLabel(job)"></button>
+                                    <template x-if="job.status==='ready' && job.device_state !== 'Server Copy Expired'">
+                                        <button type="button"
+                                                @click.stop="downloadOffline(job)"
+                                                :disabled="offlineSavingId === job.id"
+                                                class="card-action secondary w-full disabled:opacity-60">
+                                            <span x-text="bookPrimaryActionLabel(job)"></span>
+                                        </button>
+                                    </template>
+                                    <template x-if="job.status==='failed'">
+                                        <button type="button"
+                                                @click.stop="pasteTextInstead()"
+                                                class="card-action secondary w-full">
+                                            Paste text instead
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+                        </article>
+                    </template>
+                </div>
+
+                <div x-show="jobs.length > 0 && filteredJobs().length === 0" class="surface-card text-center py-14 px-6">
+                    <p class="text-lg font-semibold text-ink">No matching items</p>
+                    <p class="mt-2 text-sm text-inkLight">Try a different title or source search.</p>
+                </div>
+
+                <div x-show="jobs.length === 0" class="surface-card mt-10 text-center py-16 px-6">
+                    <div class="mx-auto mb-5 w-14 h-14 rounded-2xl bg-accent/10 text-accent flex items-center justify-center">
+                        <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 5.5c2.6-.7 4.7-.4 7 1.2 2.3-1.6 4.4-1.9 7-1.2v13c-2.6-.7-4.7-.4-7 1.2-2.3-1.6-4.4-1.9-7-1.2v-13Z"/>
+                            <path stroke-linecap="round" d="M8.2 12.4c.7-1.4 1.3-1.4 2 0s1.3 1.4 2 0 1.3-1.4 2 0 1.3 1.4 2 0"/>
+                        </svg>
+                    </div>
+                    <p class="text-2xl font-semibold text-ink">No audiobooks yet</p>
+                    <p class="mt-2 text-sm text-inkLight">Create your first audiobook from a PDF, EPUB, article, or pasted text.</p>
+                    <button @click="view = 'submit'" class="primary-button mt-6 px-6">Create Audiobook</button>
+                </div>
+            </section>
+        </div>
+
+        <!-- Player View -->
+        <div x-show="view === 'player' && activeJob" 
+             class="absolute inset-0 z-20 flex flex-col bg-paper"
+             style="display:none">
+             
+            <!-- Player Header -->
+            <div class="px-6 py-6 flex justify-between items-start">
+                <button @click="closePlayer()" class="text-inkLight hover:text-ink flex items-center gap-2 text-xs font-bold uppercase tracking-widest transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    Close
+                </button>
+                <div class="text-center max-w-sm flex-1 px-4">
+                    <h2 class="font-serif font-bold text-xl text-ink truncate mb-1" x-text="activeJob?.title"></h2>
+                    
+                    <div class="relative inline-block">
+                        <select x-model="activeChapterIdx" @change="loadChapter()" class="appearance-none bg-transparent border-none text-xs font-bold uppercase tracking-widest text-inkLight hover:text-ink focus:ring-0 pr-4 cursor-pointer">
+                            <template x-for="(ch, idx) in (activeJob?.progress?.chapters || [])" :key="idx">
+                                <option :value="idx" x-text="`Chapter ${ch.index}: ${ch.title}`"></option>
+                            </template>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center text-inkLight">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
+                    <div class="mt-2 text-[11px] font-bold uppercase tracking-widest text-inkLight" x-text="activeJobOfflineLabel()"></div>
+                </div>
+                <div class="w-16"></div>
+            </div>
+            
+            <!-- Subtitles (Cues) -->
+            <div id="cuesContainer" class="flex-1 overflow-y-auto px-8 lg:px-24 py-12 relative cue-container">
+                <div class="max-w-2xl mx-auto pb-64">
+                    <template x-for="(cue, idx) in currentCues" :key="idx">
+                        <span class="cue text-2xl md:text-3xl font-serif"
+                              :class="idx === activeCueIdx ? 'cue-active' : ''"
+                              @click="seekTo(cue.start)"
+                              x-text="cue.text + ' '">
+                        </span>
+                    </template>
+                    <div x-show="currentCues.length === 0" class="text-center text-inkLight mt-32 italic font-serif text-xl">
+                        Loading transcription...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audio Player Controls -->
+            <div class="bg-paper/95 backdrop-blur-md border-t border-ink/5 px-6 py-6 pb-8">
+                <template x-if="activeJob && activeJob.status === 'ready' && !activeJob.is_offline && activeJob.device_state !== 'Server Copy Expired'">
+                    <div class="max-w-xl mx-auto mb-4 flex items-center justify-between gap-4 border border-ink/10 bg-paperDark/35 px-4 py-3">
+                        <span class="text-xs text-inkLight font-medium">
+                            <span class="block text-ink">Save offline on this device.</span>
+                            <span class="block mt-1">For the most reliable offline listening, add Audiobook to your Home Screen.</span>
+                        </span>
+                        <button @click="downloadOffline(activeJob)"
+                                :disabled="offlineSavingId === activeJob.id"
+                                class="shrink-0 py-2 text-[10px] font-bold uppercase tracking-widest text-accent disabled:opacity-60">
+                            <span x-text="offlineSavingId === activeJob.id ? `Saving ${offlineSavingDone}/${offlineSavingTotal}` : 'Save Offline to This Device'"></span>
+                        </button>
+                    </div>
+                </template>
+                <div class="max-w-xl mx-auto flex items-center justify-end gap-1 mb-3">
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-inkLight mr-2">Speed</span>
+                    <template x-for="r in [0.75, 1, 1.25, 1.5, 1.75, 2]" :key="r">
+                        <button @click="setSpeed(r)"
+                                class="text-xs font-bold tabular-nums px-2 py-1 transition-colors"
+                                :class="playerSpeed === r ? 'text-accent' : 'text-inkLight hover:text-ink'"
+                                x-text="r + '×'"></button>
+                    </template>
+                </div>
+                <div class="max-w-xl mx-auto flex items-center justify-between gap-3">
+                    <button @click="prevChapter()" :disabled="activeChapterIdx === 0" class="text-ink hover:text-accent disabled:opacity-20 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
+                    </button>
+
+                    <button @click="skipBy(-15)" aria-label="Rewind 15 seconds" class="min-w-11 h-11 px-3 text-xs font-bold tabular-nums text-inkLight hover:text-ink transition-colors">
+                        -15s
+                    </button>
+                    
+                    <div class="flex-1">
+                        <audio id="audioEl"
+                               class="w-full outline-none"
+                               controls
+                               @timeupdate="onTimeUpdate()"
+                               @pause="savePlaybackPosition()"
+                               @seeked="savePlaybackPosition()"
+                               @canplay="restorePlaybackPosition()"
+                               @ended="nextChapter()"></audio>
+                    </div>
+
+                    <button @click="skipBy(30)" aria-label="Forward 30 seconds" class="min-w-11 h-11 px-3 text-xs font-bold tabular-nums text-inkLight hover:text-ink transition-colors">
+                        +30s
+                    </button>
+                    
+                    <button @click="nextChapter()" :disabled="!activeJob || !activeJob.progress.chapters || activeChapterIdx === activeJob.progress.chapters.length - 1" class="text-ink hover:text-accent disabled:opacity-20 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Profile Drawer -->
+        <div x-show="profileOpen" style="display:none" class="fixed inset-0 z-50 overflow-hidden">
+            <div x-show="profileOpen" x-transition.opacity class="absolute inset-0 bg-ink/20 backdrop-blur-sm" @click="profileOpen = false"></div>
+            <div x-show="profileOpen" 
+                 x-transition:enter="transform transition ease-in-out duration-300"
+                 x-transition:enter-start="translate-x-full"
+                 x-transition:enter-end="translate-x-0"
+                 x-transition:leave="transform transition ease-in-out duration-300"
+                 x-transition:leave-start="translate-x-0"
+                 x-transition:leave-end="translate-x-full"
+                 class="absolute inset-y-0 right-0 w-full max-w-sm bg-paper shadow-2xl border-l border-ink/10 flex flex-col">
+                
+                <div class="px-6 py-6 border-b border-ink/5 flex justify-between items-center bg-paperDark/50">
+                    <h2 class="font-serif text-2xl">Profile</h2>
+                    <button @click="profileOpen = false" class="text-inkLight hover:text-ink transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+                
+                <div class="flex-1 overflow-y-auto p-6 space-y-10" x-if="currentUser">
+                    
+                    <!-- Account Info -->
+                    <div>
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="w-16 h-16 rounded-full bg-ink text-paper flex items-center justify-center text-2xl font-serif overflow-hidden">
+                                <template x-if="currentUser?.avatar_url">
+                                    <img :src="currentUser.avatar_url" referrerpolicy="no-referrer" class="w-full h-full object-cover">
+                                </template>
+                                <template x-if="!currentUser?.avatar_url">
+                                    <span x-text="(currentUser?.display_name || currentUser?.email || 'U')[0].toUpperCase()"></span>
+                                </template>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-lg" x-text="currentUser?.display_name || 'Anonymous User'"></h3>
+                                <p class="text-sm text-inkLight" x-text="currentUser?.email || currentUser?.phone"></p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-2">
+                            <template x-for="provider in (currentUser?.providers || [])">
+                                <span class="text-[10px] font-bold uppercase tracking-widest bg-ink/5 text-inkLight px-2 py-1 rounded-sm" x-text="provider"></span>
+                            </template>
+                        </div>
+                    </div>
+                    
+                    <!-- Local Storage -->
+                    <div>
+                        <h4 class="text-xs font-bold uppercase tracking-widest text-inkLight mb-4">Local Device</h4>
+                        <div class="bg-paperDark/30 p-4 border border-ink/5 rounded-sm">
+                            <div class="flex justify-between items-end mb-2">
+                                <span class="text-sm font-medium">Saved Audio</span>
+                                <span class="text-2xl font-serif" x-text="jobs.filter(j => j.is_offline).length"></span>
+                            </div>
+                            <button @click="clearLocalCache()" class="text-xs font-bold uppercase tracking-widest text-danger hover:text-danger transition-colors mt-4">
+                                Clear Local Cache
+                            </button>
+                        </div>
+                    </div>
+                    
+                </div>
+                
+                <div class="p-6 border-t border-ink/5">
+                    <button @click="logout(); profileOpen = false;" class="w-full bg-transparent border border-ink text-ink hover:bg-ink hover:text-paper p-4 text-sm font-bold uppercase tracking-widest transition-colors">
+                        Sign Out
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div x-show="toast"
+             x-transition
+             style="display:none"
+             class="toast fixed left-4 right-4 bottom-6 z-[80] mx-auto max-w-sm px-4 py-3">
+            <div class="text-sm font-bold text-ink" x-text="toast?.title"></div>
+            <div class="mt-1 text-xs text-inkLight" x-text="toast?.detail"></div>
+            <div class="mt-1 text-[10px] font-bold uppercase tracking-widest text-accent" x-text="toast?.meta"></div>
+        </div>
+    </main>
+
+    <script>
+        function normalizeLocalAuthOrigin() {
+            if (window.location.hostname === '127.0.0.1') {
+                window.location.replace(`http://localhost:${window.location.port || '8000'}${window.location.pathname}${window.location.search}${window.location.hash}`);
+                return false;
+            }
+            return true;
+        }
+
+        function bootstrapAccessToken() {
+            const params = new URLSearchParams(window.location.search);
+            const token = params.get('token');
+            if (token) {
+                localStorage.setItem('audiobook_access_token', token);
+                params.delete('token');
+                const qs = params.toString();
+                window.history.replaceState({}, '', `${window.location.pathname}${qs ? '?' + qs : ''}${window.location.hash}`);
+            }
+        }
+
+        function reqOpt(method='GET', body=null) {
+            let opt = { method, headers: {} };
+            const accessToken = localStorage.getItem('audiobook_access_token');
+            if (accessToken) opt.headers['X-Token'] = accessToken;
+            if(body) {
+                if(!(body instanceof FormData)) {
+                    opt.headers['Content-Type'] = 'application/json';
+                    opt.body = JSON.stringify(body);
+                } else {
+                    opt.body = body;
+                }
+            }
+            return opt;
+        }
+
+        if (normalizeLocalAuthOrigin()) bootstrapAccessToken();
+
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('appData', () => ({
+                view: 'auth',
+                currentUser: null,
+                profileOpen: false,
+                authError: null,
+                
+                jobs: [],
+                submitting: false,
+                inputMethod: 'upload',
+                uploadDrag: false,
+                selectedFileName: '',
+                selectedFileSize: 0,
+                searchQuery: '',
+                settingsCollapsed: window.matchMedia('(max-width: 720px)').matches,
+                jobForm: { url: '', text: '', voice: 'af_heart', speed: 1.0, normalize: true },
+                pollInterval: null,
+                
+                activeJob: null,
+                activeChapterIdx: 0,
+                currentCues: [],
+                activeCueIdx: -1,
+                userScrolled: false,
+                playerSpeed: 1.0,
+                resumeRewindSeconds: 3,
+                pendingResumePosition: null,
+                resumeAppliedForSrc: '',
+                restoringPlayback: false,
+                offlineSavingId: null,
+                offlineSavingDone: 0,
+                offlineSavingTotal: 0,
+                toast: null,
+                toastTimer: null,
+
+                async init() {
+                    this.playerSpeed = parseFloat(localStorage.getItem('player_speed')) || 1.0;
+                    window.addEventListener('pagehide', () => this.savePlaybackPosition());
+                    document.addEventListener('visibilitychange', () => {
+                        if (document.visibilityState === 'hidden') this.savePlaybackPosition();
+                    });
+                    
+                    try {
+                        const res = await fetch('/api/auth/me', reqOpt());
+                        if (res.ok) {
+                            this.currentUser = await res.json();
+                            this.view = 'library';
+                            this.fetchJobs();
+                            this.pollInterval = setInterval(() => {
+                                if(this.view === 'library') this.fetchJobs();
+                            }, 3000);
+                        } else {
+                            this.view = 'auth';
+                        }
+                    } catch(e) {
+                        this.view = 'auth';
+                    }
+
+                    if ('serviceWorker' in navigator) {
+                        navigator.serviceWorker.register('/sw.js').catch(e => console.log(e));
+                    }
+                    
+                    const cuesContainer = document.getElementById('cuesContainer');
+                    if (cuesContainer) {
+                        cuesContainer.addEventListener('scroll', () => {
+                            this.userScrolled = true;
+                            clearTimeout(this.scrollTimeout);
+                            this.scrollTimeout = setTimeout(() => { this.userScrolled = false; }, 3000);
+                        });
+                    }
+                },
+
+                async loginWithGoogle() {
+                    this.authError = null;
+                    try {
+                        const provider = new window.GoogleAuthProvider();
+                        const result = await window.signInWithPopup(window.firebaseAuth, provider);
+                        const idToken = await result.user.getIdToken();
+                        await this.sendTokenToBackend(idToken);
+                    } catch (e) {
+                        console.error(e);
+                        this.setAuthError(e, 'Google');
+                    }
+                },
+
+                async loginWithPhone() {
+                    this.authError = null;
+                    const phoneNumber = prompt("Enter your phone number (e.g. +1234567890):");
+                    if (!phoneNumber) return;
+                    try {
+                        if (!window.recaptchaVerifier) {
+                            window.recaptchaVerifier = new window.RecaptchaVerifier(window.firebaseAuth, 'recaptcha-container', {
+                                'size': 'invisible'
+                            });
+                        }
+                        const confirmationResult = await window.signInWithPhoneNumber(window.firebaseAuth, phoneNumber, window.recaptchaVerifier);
+                        const otpCode = prompt("Enter the SMS code sent to " + phoneNumber + ":");
+                        if (!otpCode) return;
+                        const result = await confirmationResult.confirm(otpCode);
+                        const idToken = await result.user.getIdToken();
+                        await this.sendTokenToBackend(idToken);
+                    } catch (e) {
+                        console.error(e);
+                        this.setAuthError(e, 'Phone');
+                    }
+                },
+
+                setAuthError(error, provider='Sign-in') {
+                    const code = error?.code || '';
+                    if (code === 'auth/unauthorized-domain') {
+                        const onLoopbackIp = window.location.hostname === '127.0.0.1';
+                        this.authError = {
+                            title: 'Google sign-in is not authorized for this address.',
+                            detail: onLoopbackIp
+                                ? 'Use localhost for local testing, or add 127.0.0.1 in Firebase Authentication authorized domains.'
+                                : 'Add this domain in Firebase Authentication authorized domains, then try again.',
+                            href: onLoopbackIp ? 'http://localhost:8000' : ''
+                        };
+                        return;
+                    }
+                    this.authError = {
+                        title: `${provider} sign-in failed.`,
+                        detail: error?.message || 'Please try again.',
+                        href: ''
+                    };
+                },
+                
+                async sendTokenToBackend(idToken) {
+                    try {
+                        const res = await fetch('/api/auth/session', reqOpt('POST', {id_token: idToken}));
+                        if(res.ok) {
+                            const meRes = await fetch('/api/auth/me', reqOpt());
+                            this.currentUser = await meRes.json();
+                            this.view = 'library';
+                            this.fetchJobs();
+                            if(!this.pollInterval) {
+                                this.pollInterval = setInterval(() => {
+                                    if(this.view === 'library') this.fetchJobs();
+                                }, 3000);
+                            }
+                        } else {
+                            const err = await res.json();
+                            this.setAuthError({ message: err.detail }, 'Login');
+                        }
+                    } catch(e) {
+                        this.setAuthError(e, 'Login');
+                    }
+                },
+
+                async clearLocalCache() {
+                    if(!confirm("Are you sure you want to delete all offline audiobooks from this device?")) return;
+                    if('caches' in window && this.currentUser) {
+                        const cacheName = `audiobook-media-user-${this.currentUser.id || this.currentUser.email}`;
+                        await caches.delete(cacheName);
+                        this.fetchJobs();
+                        alert("Local cache cleared successfully.");
+                    }
+                },
+
+                async logout() {
+                    await fetch('/api/auth/logout', reqOpt('POST'));
+                    this.currentUser = null;
+                    this.jobs = [];
+                    this.view = 'auth';
+                    clearInterval(this.pollInterval);
+                    this.pollInterval = null;
+                },
+
+                async isBookCached(cache, job) {
+                    if(!job || !job.progress || !job.progress.chapters || job.progress.chapters.length === 0) return false;
+                    for (let ch of job.progress.chapters) {
+                        const audio = await cache.match(`/api/books/${job.id}/audio/${ch.mp3}`);
+                        const cues = await cache.match(`/api/books/${job.id}/cues/${ch.cues}`);
+                        if (!audio || !cues) return false;
+                    }
+                    return true;
+                },
+                
+                async fetchJobs() {
+                    if (!this.currentUser) return;
+                    try {
+                        const res = await fetch('/api/books', reqOpt());
+                        if(res.status === 401) {
+                            this.logout();
+                            return;
+                        }
+                        if(res.ok) {
+                            const newJobs = await res.json();
+                            if('caches' in window && this.currentUser) {
+                                const cacheName = `audiobook-media-user-${this.currentUser.id || this.currentUser.email}`;
+                                const cache = await caches.open(cacheName);
+                                for(let j of newJobs) {
+                                    if(j.status === 'ready' && j.progress && j.progress.chapters && j.progress.chapters.length > 0) {
+                                        j.is_offline = await this.isBookCached(cache, j);
+                                        
+                                        // Compute device state
+                                        if (j.is_offline) {
+                                            j.device_state = 'Saved offline on this device';
+                                        } else if (j.server_deleted_at || (j.server_expires_at && (Date.now()/1000) > parseFloat(j.server_expires_at))) {
+                                            j.device_state = 'Server Copy Expired';
+                                        } else {
+                                            j.device_state = 'Ready to Save';
+                                        }
+                                    }
+                                }
+                            }
+                            this.jobs = newJobs;
+                        }
+                    } catch(e) { console.error("Error fetching jobs:", e); }
+                },
+
+                setInputMethod(method) {
+                    this.inputMethod = method;
+                },
+
+                handleFileSelect(event) {
+                    const file = event.target.files && event.target.files[0];
+                    this.setSelectedFile(file);
+                },
+
+                handleFileDrop(event) {
+                    this.uploadDrag = false;
+                    const file = event.dataTransfer.files && event.dataTransfer.files[0];
+                    if (!file || !this.$refs.fileInput) return;
+                    const transfer = new DataTransfer();
+                    transfer.items.add(file);
+                    this.$refs.fileInput.files = transfer.files;
+                    this.setSelectedFile(file);
+                },
+
+                setSelectedFile(file) {
+                    if (!file) {
+                        this.selectedFileName = '';
+                        this.selectedFileSize = 0;
+                        return;
+                    }
+                    this.selectedFileName = file.name;
+                    this.selectedFileSize = file.size;
+                },
+
+                replaceSelectedFile() {
+                    if (this.$refs.fileInput) this.$refs.fileInput.click();
+                },
+
+                clearSelectedFile() {
+                    if (this.$refs.fileInput) this.$refs.fileInput.value = '';
+                    this.selectedFileName = '';
+                    this.selectedFileSize = 0;
+                },
+
+                canSubmit() {
+                    if (this.inputMethod === 'url') return !!this.jobForm.url.trim();
+                    if (this.inputMethod === 'text') return !!this.jobForm.text.trim();
+                    const fInput = this.$refs.fileInput || document.getElementById('fileInput');
+                    return !!(fInput && fInput.files && fInput.files.length > 0);
+                },
+
+                estimateTextDuration(text) {
+                    const words = (text || '').trim().split(/\s+/).filter(Boolean).length;
+                    if (!words) return '0 min audio';
+                    const minutes = Math.max(1, Math.round(words / 155));
+                    if (minutes < 60) return `${minutes} min audio`;
+                    const h = Math.floor(minutes / 60);
+                    const m = minutes % 60;
+                    return `${h}h ${m}m audio`;
+                },
+
+                async submitJob() {
+                    if (!this.canSubmit() || this.submitting) return;
+                    this.submitting = true;
+                    let fd = new FormData();
+
+                    if(this.inputMethod === 'url') fd.append('url', this.jobForm.url.trim());
+                    if(this.inputMethod === 'text') fd.append('text', this.jobForm.text.trim());
+                    if(this.inputMethod === 'upload') {
+                        const fInput = this.$refs.fileInput || document.getElementById('fileInput');
+                        if(fInput && fInput.files.length > 0) fd.append('file', fInput.files[0]);
+                    }
+                    
+                    fd.append('voice', this.jobForm.voice);
+                    fd.append('speed', this.jobForm.speed);
+                    fd.append('normalize', this.jobForm.normalize);
+
+                    let submitted = false;
+                    try {
+                        let res = await fetch('/api/books', reqOpt('POST', fd));
+                        if(res.status === 401) return this.logout();
+                        if(!res.ok) {
+                            let text = await res.text();
+                            alert("Failed to create audiobook: " + text);
+                        } else {
+                            submitted = true;
+                        }
+                    } catch (e) { alert("Network error: " + e); }
+                    finally {
+                        this.submitting = false;
+                    }
+
+                    if (!submitted) return;
+                    this.jobForm.url = '';
+                    this.jobForm.text = '';
+                    this.clearSelectedFile();
+                    this.view = 'library';
+                    this.fetchJobs();
+                    this.showToast('Audiobook queued', 'We are creating narration now.', 'Saved to Library');
+                },
+
+                async deleteJob(id) {
+                    if(!confirm("Remove this audiobook from your library?")) return;
+                    const job = this.jobs.find(j => j.id === id);
+                    this.clearPlaybackPosition(job || { id });
+                    await fetch(`/api/books/${id}`, reqOpt('DELETE'));
+                    
+                    // Also clear from local cache if it exists
+                    if('caches' in window && this.currentUser) {
+                        const cache = await caches.open(`audiobook-media-user-${this.currentUser.id || this.currentUser.email}`);
+                        if(job && job.progress && job.progress.chapters) {
+                            for(let ch of job.progress.chapters) {
+                                await cache.delete(`/api/books/${id}/audio/${ch.mp3}`);
+                                await cache.delete(`/api/books/${id}/cues/${ch.cues}`);
+                            }
+                        }
+                    }
+                    
+                    this.fetchJobs();
+                    if(this.activeJob && this.activeJob.id === id) this.closePlayer();
+                },
+
+                playbackKey(jobId) {
+                    const user = this.currentUser?.id || this.currentUser?.email || 'anonymous';
+                    return `audiobook-position-${user}-${jobId}`;
+                },
+
+                getPlaybackPosition(job) {
+                    if (!job) return null;
+                    try {
+                        const parsed = JSON.parse(localStorage.getItem(this.playbackKey(job.id)) || 'null');
+                        if (!parsed) return null;
+                        const chapterIdx = Number(parsed.chapterIdx);
+                        const currentTime = Number(parsed.currentTime);
+                        if (!Number.isFinite(chapterIdx) || !Number.isFinite(currentTime)) return null;
+                        if (chapterIdx < 0 || currentTime < 0) return null;
+                        if (chapterIdx === 0 && currentTime < 2) return null;
+                        return {
+                            chapterIdx,
+                            chapterFile: String(parsed.chapterFile || ''),
+                            currentTime,
+                            updatedAt: Number(parsed.updatedAt || 0)
+                        };
+                    } catch (e) {
+                        return null;
+                    }
+                },
+
+                savePlaybackPosition() {
+                    if (!this.activeJob) return;
+                    if (this.restoringPlayback) return;
+                    const audioEl = document.getElementById('audioEl');
+                    if (!audioEl || !Number.isFinite(audioEl.currentTime)) return;
+                    const chapterIdx = Number(this.activeChapterIdx) || 0;
+                    const chapter = this.activeJob?.progress?.chapters?.[chapterIdx] || null;
+                    try {
+                        localStorage.setItem(this.playbackKey(this.activeJob.id), JSON.stringify({
+                            version: 2,
+                            chapterIdx,
+                            chapterFile: chapter?.mp3 || '',
+                            currentTime: audioEl.currentTime,
+                            updatedAt: Date.now()
+                        }));
+                    } catch (e) {}
+                },
+
+                clearPlaybackPosition(job) {
+                    if (!job) return;
+                    try {
+                        localStorage.removeItem(this.playbackKey(job.id));
+                    } catch (e) {}
+                },
+
+                resolvePlaybackChapterIdx(job, pos) {
+                    const chapters = job?.progress?.chapters || [];
+                    if (!pos || !chapters.length) return 0;
+                    if (pos.chapterFile) {
+                        const fileIdx = chapters.findIndex(ch => ch.mp3 === pos.chapterFile);
+                        if (fileIdx >= 0) return fileIdx;
+                    }
+                    const chapterIdx = Number(pos.chapterIdx);
+                    return chapters[chapterIdx] ? chapterIdx : 0;
+                },
+
+                restorePlaybackPosition() {
+                    const pos = this.pendingResumePosition;
+                    const audioEl = document.getElementById('audioEl');
+                    if (!this.activeJob || !pos || !audioEl) return;
+                    const chapterIdx = Number(this.activeChapterIdx) || 0;
+                    if (this.resolvePlaybackChapterIdx(this.activeJob, pos) !== chapterIdx) return;
+                    const srcKey = audioEl.currentSrc || audioEl.src || '';
+                    if (srcKey && this.resumeAppliedForSrc === srcKey) return;
+                    const duration = Number.isFinite(audioEl.duration) ? audioEl.duration : Infinity;
+                    const target = Math.max(0, Math.min(duration, Number(pos.currentTime || 0) - this.resumeRewindSeconds));
+                    this.restoringPlayback = true;
+                    const clearRestoring = () => {
+                        this.restoringPlayback = false;
+                        audioEl.removeEventListener('seeked', clearRestoring);
+                    };
+                    audioEl.addEventListener('seeked', clearRestoring, { once: true });
+                    audioEl.currentTime = target;
+                    setTimeout(clearRestoring, 600);
+                    if (audioEl.readyState >= 3) {
+                        this.resumeAppliedForSrc = srcKey;
+                        this.pendingResumePosition = null;
+                    }
+                },
+
+                async openPlayer(job) {
+                    if (job.device_state === 'Server Copy Expired' && !job.is_offline) {
+                        alert("The audio files have expired from the server and are not saved on this device. Please delete and create this audiobook again.");
+                        return;
+                    }
+                    const savedPosition = this.getPlaybackPosition(job);
+                    this.pendingResumePosition = savedPosition;
+                    this.resumeAppliedForSrc = '';
+                    this.activeJob = job;
+                    this.activeChapterIdx = this.resolvePlaybackChapterIdx(job, savedPosition);
+                    this.view = 'player';
+                    this.activeCueIdx = -1;
+                    this.currentCues = [];
+                    await this.loadChapter();
+                },
+
+                closePlayer() {
+                    const audioEl = document.getElementById('audioEl');
+                    this.savePlaybackPosition();
+                    if (audioEl) audioEl.pause();
+                    this.activeJob = null;
+                    this.view = 'library';
+                    this.fetchJobs();
+                },
+
+                async loadChapter() {
+                    const chapterIdx = Number(this.activeChapterIdx) || 0;
+                    this.activeChapterIdx = chapterIdx;
+                    if(!this.activeJob || !this.activeJob.progress || !this.activeJob.progress.chapters[chapterIdx]) return;
+                    const ch = this.activeJob.progress.chapters[chapterIdx];
+                    const uQs = this.currentUser ? `?u=${this.currentUser.id || this.currentUser.email}` : '';
+                    
+                    this.currentCues = [];
+                    this.activeCueIdx = -1;
+                    
+                    try {
+                        const res = await fetch(`/api/books/${this.activeJob.id}/cues/${ch.cues}${uQs}`);
+                        if(res.ok) this.currentCues = await res.json();
+                    } catch (e) {}
+                    
+                    const audioEl = document.getElementById('audioEl');
+                    audioEl.src = `/api/books/${this.activeJob.id}/audio/${ch.mp3}${uQs}`;
+                    audioEl.playbackRate = this.playerSpeed;
+                    this.resumeAppliedForSrc = '';
+                    audioEl.onloadedmetadata = () => {
+                        audioEl.playbackRate = this.playerSpeed;
+                        this.restorePlaybackPosition();
+                    };
+
+                    try {
+                        await audioEl.play();
+                    } catch (e) {
+                        console.log("Auto-play prevented", e);
+                    }
+                },
+
+                prevChapter() {
+                    const chapterIdx = Number(this.activeChapterIdx) || 0;
+                    if(chapterIdx > 0) {
+                        this.savePlaybackPosition();
+                        this.activeChapterIdx = chapterIdx - 1;
+                        this.loadChapter();
+                    }
+                },
+
+                nextChapter() {
+                    const chapters = this.activeJob?.progress?.chapters || [];
+                    const chapterIdx = Number(this.activeChapterIdx) || 0;
+                    if(chapterIdx < chapters.length - 1) {
+                        this.savePlaybackPosition();
+                        this.activeChapterIdx = chapterIdx + 1;
+                        this.loadChapter();
+                    } else {
+                        this.clearPlaybackPosition(this.activeJob);
+                    }
+                },
+
+                setSpeed(rate) {
+                    this.playerSpeed = rate;
+                    localStorage.setItem('player_speed', rate);
+                    const audioEl = document.getElementById('audioEl');
+                    if (audioEl) audioEl.playbackRate = rate;
+                },
+
+                skipBy(seconds) {
+                    const audioEl = document.getElementById('audioEl');
+                    if (!audioEl) return;
+                    const duration = Number.isFinite(audioEl.duration) ? audioEl.duration : Infinity;
+                    audioEl.currentTime = Math.max(0, Math.min(duration, audioEl.currentTime + seconds));
+                    this.savePlaybackPosition();
+                },
+
+                formatBytes(bytes) {
+                    if (!bytes) return '';
+                    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
+                    if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+                    return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+                },
+
+                formatDuration(sec) {
+                    sec = Math.round(sec || 0);
+                    const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60);
+                    return h > 0 ? `${h}h ${m}m` : `${m}m`;
+                },
+
+                formatClock(seconds) {
+                    seconds = Math.max(0, Math.floor(Number(seconds || 0)));
+                    const h = Math.floor(seconds / 3600);
+                    const m = Math.floor((seconds % 3600) / 60);
+                    const s = seconds % 60;
+                    if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+                    return `${m}:${String(s).padStart(2, '0')}`;
+                },
+
+                filteredJobs() {
+                    const q = this.searchQuery.trim().toLowerCase();
+                    if (!q) return this.jobs;
+                    return this.jobs.filter(job => {
+                        const haystack = [
+                            job.title,
+                            job.source_type,
+                            this.sourceLabel(job),
+                            this.bookStatusLabel(job),
+                            job.device_state,
+                        ].filter(Boolean).join(' ').toLowerCase();
+                        return haystack.includes(q);
+                    });
+                },
+
+                sourceLabel(job) {
+                    if (!job) return 'Generated audiobook';
+                    if (job.source_type === 'url') return 'Article URL';
+                    if (job.source_type === 'upload') return 'Uploaded document';
+                    if (job.source_type === 'text') return 'Pasted text';
+                    return 'Generated audiobook';
+                },
+
+                voiceLabel(id) {
+                    const labels = {
+                        af_heart: 'Ava',
+                        am_adam: 'Noah',
+                        af_sky: 'Emma'
+                    };
+                    return labels[id] || 'Ava';
+                },
+
+                createdLabel(job) {
+                    const ts = parseFloat(job?.created_at || 0);
+                    if (!ts) return '';
+                    const created = new Date(ts * 1000);
+                    const today = new Date();
+                    if (created.toDateString() === today.toDateString()) return 'Today';
+                    return created.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                },
+
+                statusClass(job) {
+                    if (!job) return '';
+                    if (job.status === 'failed') return 'status-failed';
+                    if (job.status === 'queued' || job.status === 'processing') return 'status-processing';
+                    return 'status-ready';
+                },
+
+                bookCardActionLabel(job) {
+                    if (!job) return 'View status';
+                    if (job.status === 'failed') return 'Try again';
+                    if (job.status === 'queued' || job.status === 'processing') return 'View status';
+                    if (this.getPlaybackPosition(job)) return 'Continue Listening';
+                    return 'Start Listening';
+                },
+
+                bookStatusLabel(job) {
+                    if (!job) return '';
+                    if (this.offlineSavingId === job.id) return `Saving ${this.offlineSavingDone}/${this.offlineSavingTotal}`;
+                    if (job.status === 'queued') return 'Queued';
+                    if (job.status === 'processing') return 'Generating';
+                    if (job.status === 'failed') return 'Failed';
+                    if (job.is_offline) return 'Saved offline';
+                    if (job.device_state === 'Server Copy Expired') return 'Expired';
+                    if (job.status === 'ready') return 'Ready to Save';
+                    return job.status || '';
+                },
+
+                bookPrimaryActionLabel(job) {
+                    if (!job) return '';
+                    if (this.offlineSavingId === job.id) return `Saving ${this.offlineSavingDone}/${this.offlineSavingTotal}`;
+                    if (job.is_offline) return 'Remove Offline Copy';
+                    return 'Save Offline to This Device';
+                },
+
+                playbackElapsedSeconds(job, pos) {
+                    if (!job || !pos) return 0;
+                    const chapters = job.progress?.chapters || [];
+                    const chapterIdx = Math.max(0, Number(pos.chapterIdx) || 0);
+                    const previousSeconds = chapters.slice(0, chapterIdx).reduce((sum, ch) => sum + Number(ch.duration || 0), 0);
+                    return previousSeconds + Number(pos.currentTime || 0);
+                },
+
+                progressLabel(job) {
+                    const pos = this.getPlaybackPosition(job);
+                    if (!pos || !job?.duration_seconds) return '';
+                    const elapsed = this.playbackElapsedSeconds(job, pos);
+                    if (!elapsed) return '';
+                    const pct = Math.min(99, Math.max(1, Math.round((elapsed / Number(job.duration_seconds)) * 100)));
+                    return `${pct}% complete`;
+                },
+
+                positionSummary(job) {
+                    const pos = this.getPlaybackPosition(job);
+                    if (!pos) return '';
+                    const chapterIdx = this.resolvePlaybackChapterIdx(job, pos);
+                    const chapter = job?.progress?.chapters?.[chapterIdx] || null;
+                    const chapterNumber = chapter?.index || chapterIdx + 1;
+                    return `Continue from Chapter ${chapterNumber} · ${this.formatClock(pos.currentTime)}`;
+                },
+
+                failureDetail(job) {
+                    if (!job || job.status !== 'failed') return '';
+                    return 'We couldn’t create this audiobook. Try a TXT, DOCX, or paste the text.';
+                },
+
+                handleCardPrimaryAction(job) {
+                    if (!job) return;
+                    if (job.status === 'failed') {
+                        this.view = 'submit';
+                        return;
+                    }
+                    if (job.status === 'ready') this.openPlayer(job);
+                },
+
+                pasteTextInstead() {
+                    this.inputMethod = 'text';
+                    this.view = 'submit';
+                },
+
+                activeJobOfflineLabel() {
+                    if (!this.activeJob) return '';
+                    if (this.activeJob.is_offline) return 'Saved offline on this device';
+                    if (this.activeJob.device_state === 'Server Copy Expired') return 'Server copy expired';
+                    return 'Not stored on this device';
+                },
+
+                showToast(title, detail='', meta='') {
+                    this.toast = { title, detail, meta };
+                    clearTimeout(this.toastTimer);
+                    this.toastTimer = setTimeout(() => { this.toast = null; }, 4200);
+                },
+
+                hashStr(str) {
+                    let h = 0; str = str || '';
+                    for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
+                    return h;
+                },
+
+                // Deterministic generated cover from the title (no image storage, works offline).
+                coverStyle(title) {
+                    const h = this.hashStr(title);
+                    const palettes = [
+                        ['#FFFCF7', '#E8DDCA', '#6B8E3E'],
+                        ['#F7F2E8', '#D8E0CE', '#9A6A3A'],
+                        ['#F8F5ED', '#D7CFC3', '#5F6C7A'],
+                        ['#FFF9EF', '#E6D4C2', '#7F8F55'],
+                        ['#F6F0E5', '#D9E2DD', '#8B6F47'],
+                    ];
+                    const [base, wash, accent] = palettes[h % palettes.length];
+                    const ang = h % 360;
+                    const x = 18 + (h % 46);
+                    const y = 14 + ((h >> 3) % 40);
+                    return `background:
+                        radial-gradient(100% 80% at ${x}% ${y}%, ${wash} 0%, transparent 58%),
+                        radial-gradient(70% 60% at ${100 - x}% ${100 - y}%, ${accent}44 0%, transparent 62%),
+                        linear-gradient(${ang}deg, ${base} 0%, #ffffff 100%);`;
+                },
+
+                seekTo(time) {
+                    document.getElementById('audioEl').currentTime = time;
+                    this.savePlaybackPosition();
+                },
+
+                onTimeUpdate() {
+                    const t = document.getElementById('audioEl').currentTime;
+                    let low = 0, high = this.currentCues.length - 1;
+                    let found = -1;
+                    while (low <= high) {
+                        let mid = Math.floor((low + high) / 2);
+                        let c = this.currentCues[mid];
+                        if (t >= c.start && t <= c.end) {
+                            found = mid; break;
+                        } else if (t < c.start) {
+                            high = mid - 1;
+                        } else {
+                            low = mid + 1;
+                        }
+                    }
+                    if(found !== -1 && found !== this.activeCueIdx) {
+                        this.activeCueIdx = found;
+                        if (!this.userScrolled) {
+                            this.$nextTick(() => {
+                                const el = document.querySelector('.cue-active');
+                                if(el) {
+                                    const container = document.getElementById('cuesContainer');
+                                    const offset = el.offsetTop - container.offsetTop - (container.clientHeight / 2) + (el.clientHeight / 2);
+                                    container.scrollTo({ top: offset, behavior: 'smooth' });
+                                }
+                            });
+                        }
+                    }
+                    this.savePlaybackPosition();
+                },
+
+                async downloadOffline(job) {
+                    if(!('caches' in window)) return alert("Offline caching not supported.");
+                    if(!this.currentUser) return;
+                    if(this.offlineSavingId) return;
+                    
+                    const cacheName = `audiobook-media-user-${this.currentUser.id || this.currentUser.email}`;
+                    const cache = await caches.open(cacheName);
+
+                    if(job.is_offline) {
+                        if(!confirm("Remove from offline cache?")) return;
+                        for(let ch of job.progress.chapters) {
+                            await cache.delete(`/api/books/${job.id}/audio/${ch.mp3}`);
+                            await cache.delete(`/api/books/${job.id}/cues/${ch.cues}`);
+                        }
+                        job.is_offline = false;
+                        const serverExpired = job.server_deleted_at || (job.server_expires_at && (Date.now()/1000) > parseFloat(job.server_expires_at));
+                        job.device_state = serverExpired ? 'Server Copy Expired' : 'Ready to Save';
+                        return;
+                    }
+                    
+                    try {
+                        if (navigator.storage && navigator.storage.persist) {
+                            await navigator.storage.persist();
+                        }
+
+                        const urls = job.progress.chapters.flatMap(ch => [
+                            `/api/books/${job.id}/audio/${ch.mp3}`,
+                            `/api/books/${job.id}/cues/${ch.cues}`
+                        ]);
+                        this.offlineSavingId = job.id;
+                        this.offlineSavingDone = 0;
+                        this.offlineSavingTotal = urls.length;
+                        
+                        let promises = urls.map(async url => {
+                            let res = await fetch(url);
+                            if(res.ok) {
+                                await cache.put(url, res.clone());
+                                this.offlineSavingDone++;
+                            }
+                            else throw new Error(`Missing ${url}`);
+                        });
+                        
+                        await Promise.all(promises);
+
+                        if (!(await this.isBookCached(cache, job))) {
+                            throw new Error(`Cache verification failed for ${job.title}`);
+                        }
+                        
+                        await fetch(`/api/books/${job.id}/local-saved`, reqOpt('POST'));
+                        
+                        job.is_offline = true;
+                        job.device_state = 'Saved offline on this device';
+                        this.fetchJobs();
+                        this.showToast('Saved offline on this device', `${this.formatDuration(job.duration_seconds)} saved locally`, 'All audio and cues verified.');
+                    } catch(e) {
+                        alert("Failed to download: " + e);
+                    } finally {
+                        this.offlineSavingId = null;
+                        this.offlineSavingDone = 0;
+                        this.offlineSavingTotal = 0;
+                    }
+                }
+            }));
+        });
+    </script>
+    
+    <!-- Firebase SDK Setup -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+      import { getAuth, signInWithPopup, GoogleAuthProvider, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyDD-6SGEDOLtLfNk0M1ha_bJwRqNvglp2g",
+        authDomain: "audiobook-d8597.firebaseapp.com",
+        projectId: "audiobook-d8597",
+        storageBucket: "audiobook-d8597.firebasestorage.app",
+        messagingSenderId: "1044589086356",
+        appId: "1:1044589086356:web:2bce9240803c4ffe601681",
+        measurementId: "G-2S9NP8T2FL"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      
+      // Expose to Alpine.js
+      window.firebaseAuth = auth;
+      window.signInWithPopup = signInWithPopup;
+      window.GoogleAuthProvider = GoogleAuthProvider;
+      window.RecaptchaVerifier = RecaptchaVerifier;
+      window.signInWithPhoneNumber = signInWithPhoneNumber;
+    </script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+# Python / env
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Generated audio output
+out*/
+*.wav
+*.mp3
+*.srt
+*.reapeaks
+# Local tooling / agent state
+.claude/
+.omc/
+.codex/
+
+# --- Secrets & local data (NEVER commit) ---
+firebase-adminsdk.json
+*-adminsdk*.json
+audiobook.db
+audiobook.db-wal
+audiobook.db-shm
+*.sqlite
+*.sqlite3
+_uploads/
+.env
+.env.*
+# Local backups / logs
+backups/
+*.log
