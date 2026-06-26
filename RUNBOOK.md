@@ -3,7 +3,7 @@
 ## Start the Server
 Start the FastAPI server on port 8000:
 ```bash
-cd /home/comma/Documents/kokoro_test
+cd /home/comma/Documents/kokoro-audiobook
 source .venv/bin/activate
 uvicorn audiobook.server:app --host 0.0.0.0 --port 8000
 ```

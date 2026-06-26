@@ -33,3 +33,14 @@ _uploads/
 # Local backups / logs
 backups/
 *.log
+# Local scratch specs and manual benchmarks
+/AGENT_INSTRUCTIONS*.md
+/test_english_kokoro.py
+/test_kokoro.py
+
+# Local sample inputs
+/alice.epub
+/bad:title?.txt
+/test.epub
+/test.pdf
+/trading_psychology.txt
