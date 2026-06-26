@@ -1,0 +1,17 @@
+[Unit]
+Description=Kokoro Audiobook Worker
+After=network-online.target kokoro-audiobook-api.service
+Wants=network-online.target
+
+[Service]
+User=comma
+Group=comma
+WorkingDirectory=/home/comma/kokoro-audiobook
+EnvironmentFile=/etc/kokoro-audiobook.env
+ExecStart=/home/comma/kokoro-audiobook/.venv/bin/python -m audiobook.worker
+Restart=always
+RestartSec=5
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target
