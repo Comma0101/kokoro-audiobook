@@ -108,6 +108,90 @@ def test_library_is_modern_saas_copy():
         assert text in INDEX
 
 
+def test_premium_shell_uses_one_design_system():
+    for text in [
+        "app-header",
+        "app-container",
+        "page-kicker",
+        "page-title",
+        "account-button",
+        "nav-cluster",
+        "view !== 'player'",
+    ]:
+        assert text in INDEX
+
+
+def test_navbar_is_refined_command_bar():
+    for text in [
+        "topbar",
+        "brand-lockup",
+        "brand-symbol",
+        "brand-name",
+        "brand-submark",
+        "nav-cluster",
+        "nav-item",
+        "account-button",
+        "account-dot",
+    ]:
+        assert text in INDEX
+    assert "avatar-button" not in INDEX
+    assert "shell-divider" not in INDEX
+
+
+def test_library_cards_use_clean_premium_metadata():
+    for text in [
+        "displayTitle(job)",
+        "coverDisplayTitle(job)",
+        "cleanSourceLabel(job)",
+        "book-card-title",
+        "book-card-meta",
+        "book-card-footer",
+    ]:
+        assert text in INDEX
+
+
+def test_player_reads_as_same_product_in_listening_mode():
+    for text in [
+        "player-header",
+        "player-listening-surface",
+        "player-transcript",
+        "player-meta",
+        "player-page-title",
+    ]:
+        assert text in INDEX
+
+
+def test_ui_uses_ancient_natural_palette_tokens():
+    for text in [
+        "--color-parchment: #F6F0E4",
+        "--color-limestone: #E7DDCC",
+        "--color-cedar: #4F5F3A",
+        "--color-olive: #6B7C45",
+        "--color-umber: #8A6442",
+        "--color-clay: #B9855A",
+    ]:
+        assert text in INDEX
+
+
+def test_player_removes_creepy_chapter_dropdown():
+    assert "chapterLabel(activeJob, activeChapterIdx)" in INDEX
+    assert "player-chapter-label" in INDEX
+    assert "player-chapter-select" not in INDEX
+    assert '<select x-model="activeChapterIdx"' not in INDEX
+
+
+def test_player_stays_on_shared_light_natural_theme():
+    for text in [
+        "player-paper",
+        "player-reading-card",
+        "background: var(--color-parchment)",
+        "color: var(--color-text)",
+    ]:
+        assert text in INDEX
+    assert "#100D0F" not in INDEX
+    assert "#151012" not in INDEX
+
+
 def test_auth_screen_uses_product_positioning():
     assert "Start creating audiobooks" in INDEX
     assert "Turn documents, articles, and pasted text into listenable audio." in INDEX
@@ -159,6 +243,34 @@ def test_player_has_minimal_audiobook_controls():
         "Forward 30 seconds",
         "Chapter",
         "Save Offline to This Device",
+    ]:
+        assert text in INDEX
+
+
+def test_player_has_minimal_ambient_treatment():
+    for text in [
+        "player-ambient",
+        "playerAmbientStyle(activeJob)",
+        "--ambient-1",
+        "--ambient-2",
+        "player-control-panel",
+        "player-primary-control",
+        "player-progress",
+        "@media (prefers-reduced-motion: no-preference)",
+    ]:
+        assert text in INDEX
+
+
+def test_player_uses_clear_custom_controls():
+    for text in [
+        "togglePlayback",
+        "seekPlayer",
+        "playerCurrentTime",
+        "playerDuration",
+        "playerPlaying",
+        "Play audiobook",
+        "Pause audiobook",
+        "formatClock(playerCurrentTime)",
     ]:
         assert text in INDEX
 
@@ -231,7 +343,7 @@ def test_mobile_create_css_contract():
 
 
 def test_service_worker_cache_version_bumped():
-    assert "audiobook-app-v24" in SW
+    assert "audiobook-app-v28" in SW
 
 
 if __name__ == "__main__":
@@ -246,6 +358,13 @@ if __name__ == "__main__":
         test_create_flow_is_tabbed_and_plain_language,
         test_narration_settings_are_consumer_friendly,
         test_library_is_modern_saas_copy,
+        test_premium_shell_uses_one_design_system,
+        test_navbar_is_refined_command_bar,
+        test_library_cards_use_clean_premium_metadata,
+        test_player_reads_as_same_product_in_listening_mode,
+        test_ui_uses_ancient_natural_palette_tokens,
+        test_player_removes_creepy_chapter_dropdown,
+        test_player_stays_on_shared_light_natural_theme,
         test_auth_screen_uses_product_positioning,
         test_auth_errors_are_inline_and_actionable,
         test_frontend_caches_query_token_for_api_requests,
@@ -253,6 +372,8 @@ if __name__ == "__main__":
         test_service_worker_uses_network_first_for_navigation_shell,
         test_resume_listening_ui_contract,
         test_player_has_minimal_audiobook_controls,
+        test_player_has_minimal_ambient_treatment,
+        test_player_uses_clear_custom_controls,
         test_failure_recovery_copy_exists,
         test_resume_saves_on_player_lifecycle_events,
         test_resume_restores_with_context_and_rewind,

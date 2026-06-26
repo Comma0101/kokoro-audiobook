@@ -1,4 +1,4 @@
-const CACHE_NAME = 'audiobook-app-v24';
+const CACHE_NAME = 'audiobook-app-v28';
 
 const APP_SHELL = [
     '/',
