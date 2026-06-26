@@ -16,8 +16,8 @@ from pydantic import BaseModel
 import firebase_admin
 from firebase_admin import credentials, auth as firebase_auth
 
-from .engine import generate_audiobook
-from .db import init_db, get_db, hash_session_token, claim_next_queued_book
+from .config import get_config
+from .db import get_create_limit_violation, init_db, get_db, hash_session_token
 
 app = FastAPI()
 
@@ -43,7 +43,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-OUT_DIR = Path("./out").absolute()
+CONFIG = get_config()
+
+OUT_DIR = CONFIG.out_dir
 OUT_DIR.mkdir(exist_ok=True)
 UPLOAD_DIR = OUT_DIR / "_uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
@@ -53,8 +55,21 @@ STATIC_DIR.mkdir(exist_ok=True)
 
 # Upload limits (override via env on the deployment host).
 # Generous defaults for the beta friend-circle test (big image-heavy PDFs run large).
-MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES", str(2 * 1024 * 1024 * 1024)))  # 2 GB
-MAX_TEXT_BYTES = int(os.getenv("MAX_TEXT_BYTES", str(50 * 1024 * 1024)))             # 50 MB
+MAX_UPLOAD_BYTES = CONFIG.max_upload_bytes
+MAX_TEXT_BYTES = CONFIG.max_text_bytes
+
+def _enforce_create_limits(user_id: str):
+    if not CONFIG.enforce_queue_limits:
+        return
+
+    violation = get_create_limit_violation(
+        user_id,
+        max_active_jobs_per_user=CONFIG.max_active_jobs_per_user,
+        max_global_queued_jobs=CONFIG.max_global_queued_jobs,
+        min_create_interval_seconds=CONFIG.min_create_interval_seconds,
+    )
+    if violation:
+        raise HTTPException(status_code=429, detail=violation)
 
 def _save_upload_bounded(upload_file, dest_path: str, max_bytes: int) -> int:
     """Stream an upload to disk, aborting (and cleaning up) if it exceeds max_bytes."""
@@ -193,139 +208,14 @@ async def get_me(user_id: str = Depends(get_current_user)):
             "settings": settings
         }
 
-# --- Worker ---
-import sqlite3
-async def worker():
-    while True:
-        job = await asyncio.to_thread(claim_next_queued_book)
-        if not job:
-            await asyncio.sleep(2)
-            continue
-            
-        job_id = job['id']
-        
-        try:
-            progress_dict = {
-                "title": "", "chapters_done": 0, "chapter_index": 0, "total_chapters": 0,
-                "total_chunks": 0, "chunks_done": 0, "audio_seconds": 0, "total_audio_seconds": 0,
-                "chunk_chars": 0, "max_chunk_chars": 0, "chunk_mode": "",
-                "lang": "", "voice": "", "percent": 0
-            }
-            
-            def progress_cb(stage, **kwargs):
-                p = progress_dict
-                if stage == "chapter_start":
-                    p["title"] = kwargs.get("title", "")
-                    p["chapter_index"] = kwargs.get("index", 0)
-                    p["total_chapters"] = kwargs.get("total", 0)
-                elif stage == "chapter_info":
-                    p["total_chunks"] = kwargs.get("total_chunks", 0)
-                    p["chunks_done"] = 0
-                    p["chunk_chars"] = kwargs.get("chunk_chars", 0)
-                    p["max_chunk_chars"] = kwargs.get("max_chunk_chars", 0)
-                    p["chunk_mode"] = kwargs.get("chunk_mode", "")
-                    p["lang"] = kwargs.get("lang", "")
-                    p["voice"] = kwargs.get("voice", "")
-                elif stage == "chapter_progress":
-                    p["chunks_done"] = kwargs.get("chunks_done", 0)
-                    p["total_chunks"] = kwargs.get("total_chunks", 0)
-                    p["audio_seconds"] = kwargs.get("audio_seconds", 0)
-                    frac = (kwargs.get("chunks_done", 0) / kwargs.get("total_chunks", 1)) if kwargs.get("total_chunks") else 0
-                    p["percent"] = round(100 * (p["chapters_done"] + frac) / max(1, p["total_chapters"]), 1)
-                elif stage in ["chapter_done", "chapter_skipped"]:
-                    p["chapters_done"] += 1
-                    if stage == "chapter_done":
-                        p["total_audio_seconds"] = p.get("total_audio_seconds", 0) + kwargs.get("seconds", 0)
-                    p["percent"] = round(100 * p["chapters_done"] / max(1, p["total_chapters"]), 1)
-                
-                with sqlite3.connect(Path("./audiobook.db").absolute(), timeout=30) as db_cb:
-                    db_cb.execute("UPDATE books SET progress = ?, progress_meta = ?, updated_at = ? WHERE id = ?",
-                                  (p["percent"], json.dumps(p), str(time.time()), job_id))
-                    db_cb.commit()
-            
-            def run_job_sync():
-                return generate_audiobook(
-                    source_input=job["source_input"],
-                    out_dir=OUT_DIR,
-                    voice=job["voice"],
-                    voice_zh=job.get("voice_zh", "zf_xiaobei"),
-                    speed=job["speed"],
-                    lang=job["language"],
-                    normalize=bool(job["normalize"]),
-                    title=job.get("title"),
-                    progress_cb=progress_cb,
-                    force=True
-                )
-            
-            res = await asyncio.to_thread(run_job_sync)
-            
-            # Rename output directory to the UUID job_id to prevent collision
-            if res.out_dir.exists() and res.out_dir.name != job_id:
-                new_dir = OUT_DIR / job_id
-                if new_dir.exists():
-                    shutil.rmtree(new_dir)
-                res.out_dir.rename(new_dir)
-
-            # Total size of the generated audio (what the user downloads for offline).
-            book_final_dir = OUT_DIR / job_id
-            total_bytes = sum(f.stat().st_size for f in book_final_dir.glob("*.mp3")) if book_final_dir.exists() else 0
-
-            now_ts = time.time()
-            expires_at = now_ts + (72 * 60 * 60) # 72 hours
-            
-            with get_db() as db:
-                db.execute("""
-                    UPDATE books
-                    SET status = 'ready',
-                        title = ?,
-                        duration_seconds = ?,
-                        total_bytes = ?,
-                        progress_meta = ?,
-                        server_expires_at = ?,
-                        updated_at = ?
-                    WHERE id = ?
-                """, (res.title, sum(c['duration'] for c in res.chapters_meta), total_bytes, json.dumps({"chapters": res.chapters_meta, **progress_dict}), str(expires_at), str(now_ts), job_id))
-                db.commit()
-            
-        except Exception as e:
-            with get_db() as db:
-                db.execute("UPDATE books SET status = 'failed', error_message = ?, updated_at = ? WHERE id = ?",
-                           (str(e), str(time.time()), job_id))
-                db.commit()
-            
-        finally:
-            if job.get("source_type") == "upload" and job["source_input"] and os.path.exists(job["source_input"]):
-                try: os.remove(job["source_input"])
-                except: pass
-
-async def cleanup_daemon():
-    while True:
-        try:
-            now_ts = time.time()
-            with get_db() as db:
-                cursor = db.execute("SELECT id FROM books WHERE status = 'ready' AND server_deleted_at IS NULL AND CAST(server_expires_at AS REAL) < ?", (now_ts,))
-                expired_books = cursor.fetchall()
-                
-                for row in expired_books:
-                    book_id = row['id']
-                    book_dir = OUT_DIR / book_id
-                    if book_dir.exists():
-                        shutil.rmtree(book_dir)
-                    db.execute("UPDATE books SET server_deleted_at = ?, updated_at = ? WHERE id = ?", (str(now_ts), str(now_ts), book_id))
-                db.commit()
-        except Exception as e:
-            print(f"Cleanup error: {e}")
-        
-        await asyncio.sleep(600)
-
 @app.on_event("startup")
 async def startup_event():
-    import torch
-    if torch.cuda.is_available():
-        from .tts import get_pipeline
-        get_pipeline("a")
-    asyncio.create_task(worker())
-    asyncio.create_task(cleanup_daemon())
+    cfg = get_config()
+    if cfg.start_inprocess_worker:
+        from .worker import run_cleanup_loop, run_worker_loop
+
+        asyncio.create_task(run_worker_loop(cfg))
+        asyncio.create_task(run_cleanup_loop(cfg))
 
 # --- Jobs API ---
 @app.post("/api/books")
@@ -340,6 +230,7 @@ async def create_book(
     normalize: bool = Form(True),
     user_id: str = Depends(get_current_user)
 ):
+    _enforce_create_limits(user_id)
     job_id = str(uuid.uuid4())
     
     source_type = "text"
