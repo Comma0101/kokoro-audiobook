@@ -13,11 +13,12 @@ def private_resolver(host, port, *args, **kwargs):
 
 
 class FakeResponse:
-    def __init__(self, status_code=200, headers=None, body=b"<html></html>"):
+    def __init__(self, status_code=200, headers=None, body=b"<html></html>", encoding="utf-8", apparent_encoding=None):
         self.status_code = status_code
         self.headers = headers or {}
         self.content = body
-        self.encoding = "utf-8"
+        self.encoding = encoding
+        self.apparent_encoding = apparent_encoding
 
     def iter_content(self, chunk_size=65536):
         yield self.content
@@ -129,6 +130,29 @@ def test_url_source_load_uses_safe_fetcher():
     assert "safe public content" in chapters[0].text
 
 
+def test_safe_fetch_decodes_gb2312_article_html():
+    html = """
+        <html>
+          <head><meta http-equiv="Content-Type" content="text/html; charset=gb2312"></head>
+          <body><article><h1>红楼梦</h1><p>甄士隐梦幻识通灵。</p></article></body>
+        </html>
+    """.encode("gb2312")
+    session = FakeSession([
+        FakeResponse(
+            headers={"Content-Type": "text/html"},
+            body=html,
+            encoding="ISO-8859-1",
+            apparent_encoding="GB2312",
+        ),
+    ])
+
+    text = url_source.safe_fetch_url("https://example.com/hlm/001.htm", session=session, resolver=public_resolver)
+
+    assert "红楼梦" in text
+    assert "甄士隐梦幻识通灵" in text
+    assert "ºìÂ¥" not in text
+
+
 if __name__ == "__main__":
     for test in [
         test_rejects_non_http_urls,
@@ -138,6 +162,7 @@ if __name__ == "__main__":
         test_safe_fetch_blocks_redirect_to_private_ip,
         test_safe_fetch_explains_blocked_article_recovery,
         test_url_source_load_uses_safe_fetcher,
+        test_safe_fetch_decodes_gb2312_article_html,
     ]:
         test()
     print("url source security tests passed")

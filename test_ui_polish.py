@@ -96,6 +96,19 @@ def test_narration_settings_are_consumer_friendly():
         assert text in INDEX
 
 
+def test_chinese_voice_selector_posts_backend_field():
+    for text in [
+        "Chinese voice",
+        "voice_zh: 'zf_xiaobei'",
+        "Lina — Mandarin female voice",
+        "Mei — Gentle Mandarin voice",
+        "Jun — Mandarin male voice",
+        "fd.append('voice_zh', this.jobForm.voice_zh)",
+        "chineseVoiceLabel(jobForm.voice_zh)",
+    ]:
+        assert text in INDEX
+
+
 def test_library_is_modern_saas_copy():
     for text in [
         "Your generated audiobooks.",
@@ -398,6 +411,7 @@ if __name__ == "__main__":
         test_us_market_branding_removed_cjk_identity,
         test_create_flow_is_tabbed_and_plain_language,
         test_narration_settings_are_consumer_friendly,
+        test_chinese_voice_selector_posts_backend_field,
         test_library_is_modern_saas_copy,
         test_premium_shell_uses_one_design_system,
         test_navbar_is_refined_command_bar,

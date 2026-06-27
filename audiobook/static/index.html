@@ -646,7 +646,7 @@
                                 <span class="block text-sm font-semibold text-ink">Narration</span>
                                 <span class="block text-xs text-inkLight mt-1">Voice, speed, and cleanup</span>
                             </span>
-                            <span class="text-right text-sm font-semibold text-ink" x-text="`${voiceLabel(jobForm.voice)} · ${Number(jobForm.speed).toFixed(1)}x`"></span>
+                            <span class="text-right text-sm font-semibold text-ink" x-text="`${voiceLabel(jobForm.voice)} · ${chineseVoiceLabel(jobForm.voice_zh)} · ${Number(jobForm.speed).toFixed(1)}x`"></span>
                         </button>
 
                         <div class="settings-heading">
@@ -657,11 +657,19 @@
                         <div class="settings-body" x-show="!settingsCollapsed">
                             <div class="settings-grid">
                                 <div>
-                                    <label for="voiceSelect" class="field-label block mb-2">Voice</label>
+                                    <label for="voiceSelect" class="field-label block mb-2">English voice</label>
                                     <select id="voiceSelect" x-model="jobForm.voice" class="field-control cursor-pointer">
                                         <option value="af_heart">Ava — Warm female voice</option>
                                         <option value="am_adam">Noah — Clear male voice</option>
                                         <option value="af_sky">Emma — Calm narrator</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="voiceZhSelect" class="field-label block mb-2">Chinese voice</label>
+                                    <select id="voiceZhSelect" x-model="jobForm.voice_zh" class="field-control cursor-pointer">
+                                        <option value="zf_xiaobei">Lina — Mandarin female voice</option>
+                                        <option value="zf_xiaoni">Mei — Gentle Mandarin voice</option>
+                                        <option value="zm_yunjian">Jun — Mandarin male voice</option>
                                     </select>
                                 </div>
                                 <div>
@@ -1123,7 +1131,7 @@
                 selectedFile: null,
                 searchQuery: '',
                 settingsCollapsed: window.matchMedia('(max-width: 720px)').matches,
-                jobForm: { url: '', text: '', voice: 'af_heart', speed: 1.0, normalize: true },
+                jobForm: { url: '', text: '', voice: 'af_heart', voice_zh: 'zf_xiaobei', speed: 1.0, normalize: true },
                 pollInterval: null,
                 
                 activeJob: null,
@@ -1459,6 +1467,7 @@
                     }
                     
                     fd.append('voice', this.jobForm.voice);
+                    fd.append('voice_zh', this.jobForm.voice_zh);
                     fd.append('speed', this.jobForm.speed);
                     fd.append('normalize', this.jobForm.normalize);
 
@@ -1841,6 +1850,15 @@
                         af_sky: 'Emma'
                     };
                     return labels[id] || 'Ava';
+                },
+
+                chineseVoiceLabel(id) {
+                    const labels = {
+                        zf_xiaobei: 'Lina',
+                        zf_xiaoni: 'Mei',
+                        zm_yunjian: 'Jun'
+                    };
+                    return labels[id] || 'Lina';
                 },
 
                 createdLabel(job) {

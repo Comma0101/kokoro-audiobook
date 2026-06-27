@@ -1,5 +1,6 @@
 import ipaddress
 import os
+import re
 import socket
 from urllib.parse import urljoin, urlparse
 
@@ -14,6 +15,8 @@ REQUEST_TIMEOUT = (5, 20)
 USER_AGENT = "kokoro-audiobook/1.0"
 REDIRECT_STATUSES = {301, 302, 303, 307, 308}
 LOCAL_HOSTNAMES = {"localhost", "localhost.localdomain"}
+META_CHARSET_RE = re.compile(br"<meta[^>]+charset=[\"']?\s*([A-Za-z0-9._-]+)", re.IGNORECASE)
+HEADER_CHARSET_RE = re.compile(r"charset=[\"']?\s*([A-Za-z0-9._-]+)", re.IGNORECASE)
 
 
 def validate_public_http_url(input_url: str, *, resolver=socket.getaddrinfo) -> str:
@@ -120,8 +123,30 @@ def _read_limited_text(response, max_bytes: int) -> str:
         if len(data) > max_bytes:
             raise ValueError(f"Article response is too large (max {max_bytes // (1024 * 1024)} MB).")
 
-    encoding = getattr(response, "encoding", None) or "utf-8"
-    return bytes(data).decode(encoding, errors="replace")
+    body = bytes(data)
+    encoding = _response_encoding(response, body)
+    try:
+        return body.decode(encoding, errors="replace")
+    except LookupError:
+        return body.decode("utf-8", errors="replace")
+
+
+def _response_encoding(response, body: bytes) -> str:
+    content_type = response.headers.get("Content-Type") or response.headers.get("content-type") or ""
+    header_match = HEADER_CHARSET_RE.search(content_type)
+    if header_match:
+        return header_match.group(1)
+
+    meta_match = META_CHARSET_RE.search(body[:4096])
+    if meta_match:
+        return meta_match.group(1).decode("ascii", errors="ignore") or "utf-8"
+
+    encoding = getattr(response, "encoding", None)
+    if encoding and encoding.lower() != "iso-8859-1":
+        return encoding
+
+    apparent = getattr(response, "apparent_encoding", None)
+    return apparent or encoding or "utf-8"
 
 
 class UrlSource:
