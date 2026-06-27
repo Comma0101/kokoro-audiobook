@@ -1,8 +1,10 @@
+import json
 from pathlib import Path
 
 ROOT = Path(__file__).parent
 INDEX = (ROOT / "audiobook" / "static" / "index.html").read_text(encoding="utf-8")
 SW = (ROOT / "audiobook" / "static" / "sw.js").read_text(encoding="utf-8")
+MANIFEST = json.loads((ROOT / "audiobook" / "static" / "manifest.webmanifest").read_text(encoding="utf-8"))
 
 
 def test_offline_copy_is_device_specific():
@@ -241,6 +243,24 @@ def test_pwa_install_guidance_is_available_without_modal():
     assert "installApp()" in INDEX
 
 
+def test_pwa_manifest_uses_real_installable_icons():
+    icons = MANIFEST["icons"]
+    icon_sizes = {icon["sizes"] for icon in icons}
+
+    assert "192x192" in icon_sizes
+    assert "512x512" in icon_sizes
+    assert any("maskable" in icon.get("purpose", "") for icon in icons)
+    assert all(not icon["src"].startswith("data:") for icon in icons)
+    assert all(icon.get("type") == "image/png" for icon in icons)
+
+
+def test_mobile_pwa_guidance_does_not_depend_only_on_browser_prompt():
+    assert "isMobileDevice()" in INDEX
+    assert "installInstructions()" in INDEX
+    assert "Open your browser menu, then choose Add to Home screen." in INDEX
+    assert "this.canPromptInstall() || this.isIosDevice() || this.isMobileDevice()" in INDEX
+
+
 def test_service_worker_uses_network_first_for_navigation_shell():
     assert "e.request.mode === 'navigate'" in SW
     assert "fetch(e.request)" in SW
@@ -364,7 +384,7 @@ def test_mobile_create_css_contract():
 
 
 def test_service_worker_cache_version_bumped():
-    assert "audiobook-app-v28" in SW
+    assert "audiobook-app-v29" in SW
 
 
 if __name__ == "__main__":
@@ -390,6 +410,11 @@ if __name__ == "__main__":
         test_auth_errors_are_inline_and_actionable,
         test_frontend_caches_query_token_for_api_requests,
         test_frontend_redirects_loopback_ip_to_firebase_safe_localhost,
+        test_upload_submit_uses_reactive_file_state,
+        test_selected_upload_filename_is_mobile_safe,
+        test_pwa_install_guidance_is_available_without_modal,
+        test_pwa_manifest_uses_real_installable_icons,
+        test_mobile_pwa_guidance_does_not_depend_only_on_browser_prompt,
         test_service_worker_uses_network_first_for_navigation_shell,
         test_resume_listening_ui_contract,
         test_player_has_minimal_audiobook_controls,

@@ -59,7 +59,12 @@ def safe_fetch_url(input_url: str, *, session=None, resolver=socket.getaddrinfo)
             continue
 
         if status >= 400:
-            raise ValueError(f"Could not fetch url: {current_url}")
+            if status in {401, 403, 451}:
+                raise ValueError(
+                    "We couldn't access this article. The page may be private, blocked, "
+                    "or behind a login. Paste the text instead."
+                )
+            raise ValueError(f"Could not fetch url: {current_url} (HTTP {status})")
 
         return _read_limited_text(response, MAX_URL_BYTES)
 

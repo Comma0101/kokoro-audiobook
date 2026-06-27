@@ -1,9 +1,11 @@
-const CACHE_NAME = 'audiobook-app-v28';
+const CACHE_NAME = 'audiobook-app-v29';
 
 const APP_SHELL = [
     '/',
     '/index.html',
-    '/manifest.webmanifest'
+    '/manifest.webmanifest',
+    '/icons/app-icon-192.png',
+    '/icons/app-icon-512.png'
 ];
 
 self.addEventListener('install', (e) => {

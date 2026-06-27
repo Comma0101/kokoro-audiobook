@@ -723,11 +723,11 @@
                             <div class="min-w-0">
                                 <p class="text-sm font-semibold text-ink">Add to Home Screen</p>
                                 <p class="mt-1 text-sm text-inkLight">For the most reliable offline listening, install this app on your device.</p>
-                                <p x-show="isIosDevice()" class="mt-1 text-xs text-inkLight">On iPhone, use Safari Share, then Add to Home Screen.</p>
+                                <p class="mt-1 text-xs text-inkLight" x-text="installInstructions()"></p>
                             </div>
                         </div>
                         <div class="install-card-actions flex gap-2">
-                            <button type="button" x-show="canPromptInstall()" @click="installApp()" class="card-action primary px-4">Add App</button>
+                            <button type="button" @click="installApp()" class="card-action primary px-4" x-text="canPromptInstall() ? 'Add App' : 'How to Add'"></button>
                             <button type="button" @click="dismissInstallCard()" class="card-action secondary px-4">Not now</button>
                         </div>
                     </div>
@@ -766,11 +766,11 @@
                         <div class="min-w-0">
                             <p class="text-sm font-semibold text-ink">Add to Home Screen</p>
                             <p class="mt-1 text-sm text-inkLight">For the most reliable offline listening, install this app on your device.</p>
-                            <p x-show="isIosDevice()" class="mt-1 text-xs text-inkLight">On iPhone, use Safari Share, then Add to Home Screen.</p>
+                            <p class="mt-1 text-xs text-inkLight" x-text="installInstructions()"></p>
                         </div>
                     </div>
                     <div class="install-card-actions flex gap-2">
-                        <button type="button" x-show="canPromptInstall()" @click="installApp()" class="card-action primary px-4">Add App</button>
+                        <button type="button" @click="installApp()" class="card-action primary px-4" x-text="canPromptInstall() ? 'Add App' : 'How to Add'"></button>
                         <button type="button" @click="dismissInstallCard()" class="card-action secondary px-4">Not now</button>
                     </div>
                 </div>
@@ -1145,7 +1145,7 @@
                 toast: null,
                 toastTimer: null,
                 installPromptEvent: null,
-                installDismissed: localStorage.getItem('audiobook_install_dismissed') === '1',
+                installDismissed: localStorage.getItem('audiobook_install_dismissed_v2') === '1',
 
                 async init() {
                     this.playerSpeed = parseFloat(localStorage.getItem('player_speed')) || 1.0;
@@ -1160,7 +1160,7 @@
                     window.addEventListener('appinstalled', () => {
                         this.installPromptEvent = null;
                         this.installDismissed = true;
-                        localStorage.setItem('audiobook_install_dismissed', '1');
+                        localStorage.setItem('audiobook_install_dismissed_v2', '1');
                     });
                     
                     try {
@@ -1391,22 +1391,33 @@
                     return /iphone|ipad|ipod/i.test(window.navigator.userAgent || '') && !this.isInstalled();
                 },
 
+                isMobileDevice() {
+                    const ua = window.navigator.userAgent || '';
+                    return /iphone|ipad|ipod|android/i.test(ua) || window.matchMedia('(max-width: 720px)').matches;
+                },
+
                 canPromptInstall() {
                     return !!this.installPromptEvent;
                 },
 
+                installInstructions() {
+                    if (this.canPromptInstall()) return 'Tap Add App to install it for faster access and reliable offline listening.';
+                    if (this.isIosDevice()) return 'On iPhone, open Safari Share, then choose Add to Home Screen.';
+                    return 'Open your browser menu, then choose Add to Home screen.';
+                },
+
                 showInstallCard() {
-                    return !this.installDismissed && !this.isInstalled() && (this.canPromptInstall() || this.isIosDevice());
+                    return !this.installDismissed && !this.isInstalled() && (this.canPromptInstall() || this.isIosDevice() || this.isMobileDevice());
                 },
 
                 dismissInstallCard() {
                     this.installDismissed = true;
-                    localStorage.setItem('audiobook_install_dismissed', '1');
+                    localStorage.setItem('audiobook_install_dismissed_v2', '1');
                 },
 
                 async installApp() {
                     if (!this.installPromptEvent) {
-                        this.showToast('Add to Home Screen', 'On iPhone, use Safari Share, then Add to Home Screen.', 'Best for offline listening');
+                        this.showToast('Add to Home Screen', this.installInstructions(), 'Best for offline listening');
                         return;
                     }
                     const promptEvent = this.installPromptEvent;
@@ -1415,7 +1426,7 @@
                     const choice = await promptEvent.userChoice;
                     if (choice && choice.outcome === 'accepted') {
                         this.installDismissed = true;
-                        localStorage.setItem('audiobook_install_dismissed', '1');
+                        localStorage.setItem('audiobook_install_dismissed_v2', '1');
                     }
                 },
 

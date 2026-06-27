@@ -86,6 +86,21 @@ def test_safe_fetch_blocks_redirect_to_private_ip():
     assert session.requested_urls == ["https://example.com/article"]
 
 
+def test_safe_fetch_explains_blocked_article_recovery():
+    session = FakeSession([
+        FakeResponse(status_code=403, body=b"<html>Forbidden</html>"),
+    ])
+
+    try:
+        url_source.safe_fetch_url("https://example.com/article", session=session, resolver=public_resolver)
+    except ValueError as exc:
+        message = str(exc)
+        assert "couldn't access" in message.lower()
+        assert "paste the text" in message.lower()
+    else:
+        raise AssertionError("Expected blocked article to raise a recovery error")
+
+
 def test_url_source_load_uses_safe_fetcher():
     original_fetch = url_source.safe_fetch_url
     try:
@@ -121,6 +136,7 @@ if __name__ == "__main__":
         test_rejects_private_ip_literal,
         test_rejects_hostname_that_resolves_to_private_ip,
         test_safe_fetch_blocks_redirect_to_private_ip,
+        test_safe_fetch_explains_blocked_article_recovery,
         test_url_source_load_uses_safe_fetcher,
     ]:
         test()

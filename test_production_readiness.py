@@ -105,8 +105,18 @@ def test_requirements_file_lists_runtime_dependencies():
         "beautifulsoup4",
         "trafilatura",
         "num2words",
+        "ordered-set",
+        "pypinyin",
     ]:
         assert dep in text
+
+
+def test_google_cloud_env_uses_rollback_friendly_packed_chunks():
+    env = Path("deploy/google-cloud/kokoro-audiobook.env").read_text(encoding="utf-8")
+
+    assert "AUDIOBOOK_CHUNK_MODE=packed" in env
+    assert "AUDIOBOOK_CHUNK_TARGET_CHARS=800" in env
+    assert "AUDIOBOOK_CHUNK_MAX_CHARS=1200" in env
 
 
 def _reset_test_db(tmpdir):
@@ -513,6 +523,7 @@ if __name__ == "__main__":
         test_worker_module_provides_external_entrypoint,
         test_worker_loop_moved_out_of_server_module,
         test_requirements_file_lists_runtime_dependencies,
+        test_google_cloud_env_uses_rollback_friendly_packed_chunks,
         test_claim_next_queued_book_records_worker_and_heartbeat,
         test_fresh_processing_job_is_not_recovered,
         test_stale_processing_job_is_requeued,
