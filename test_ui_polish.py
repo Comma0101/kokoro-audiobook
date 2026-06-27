@@ -100,9 +100,7 @@ def test_narration_settings_are_consumer_friendly():
 def test_chinese_voice_selector_posts_backend_field():
     for text in [
         "Chinese voice",
-        "voice_zh: 'zf_xiaobei'",
-        "Lina — Mandarin female voice",
-        "Mei — Gentle Mandarin voice",
+        "voice_zh: 'zm_yunxi'",
         "Xiaoxiao — Bright Mandarin voice",
         "Jun — Mandarin male voice",
         "Yunxi — Young Mandarin male voice",
@@ -117,13 +115,18 @@ def test_chinese_voice_selector_posts_backend_field():
 def test_chinese_voice_samples_page_lists_all_voice_assets():
     for text in [
         "Chinese Voice Samples",
-        "/samples/zh-zf_xiaobei.mp3",
-        "/samples/zh-zf_xiaoni.mp3",
         "/samples/zh-zf_xiaoxiao.mp3",
         "/samples/zh-zm_yunjian.mp3",
         "/samples/zh-zm_yunxi.mp3",
     ]:
         assert text in VOICE_SAMPLES
+    for text in [
+        "/samples/zh-zf_xiaobei.mp3",
+        "/samples/zh-zf_xiaoni.mp3",
+        "Lina — Mandarin female voice",
+        "Mei — Gentle Mandarin voice",
+    ]:
+        assert text not in VOICE_SAMPLES
 
 
 def test_library_is_modern_saas_copy():
