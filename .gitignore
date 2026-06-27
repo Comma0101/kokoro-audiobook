@@ -12,6 +12,8 @@ htmlcov/
 out*/
 *.wav
 *.mp3
+!audiobook/static/samples/
+!audiobook/static/samples/*.mp3
 *.srt
 *.reapeaks
 # Local tooling / agent state

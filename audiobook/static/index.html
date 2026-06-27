@@ -669,8 +669,11 @@
                                     <select id="voiceZhSelect" x-model="jobForm.voice_zh" class="field-control cursor-pointer">
                                         <option value="zf_xiaobei">Lina — Mandarin female voice</option>
                                         <option value="zf_xiaoni">Mei — Gentle Mandarin voice</option>
+                                        <option value="zf_xiaoxiao">Xiaoxiao — Bright Mandarin voice</option>
                                         <option value="zm_yunjian">Jun — Mandarin male voice</option>
+                                        <option value="zm_yunxi">Yunxi — Young Mandarin male voice</option>
                                     </select>
+                                    <a href="/voice-samples.html" target="_blank" rel="noopener" class="mt-2 inline-block text-sm font-semibold text-accent">Hear Chinese voice samples</a>
                                 </div>
                                 <div>
                                     <p class="field-label mb-2">Speed</p>
@@ -1856,7 +1859,9 @@
                     const labels = {
                         zf_xiaobei: 'Lina',
                         zf_xiaoni: 'Mei',
-                        zm_yunjian: 'Jun'
+                        zf_xiaoxiao: 'Xiaoxiao',
+                        zm_yunjian: 'Jun',
+                        zm_yunxi: 'Yunxi'
                     };
                     return labels[id] || 'Lina';
                 },

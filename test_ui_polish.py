@@ -5,6 +5,7 @@ ROOT = Path(__file__).parent
 INDEX = (ROOT / "audiobook" / "static" / "index.html").read_text(encoding="utf-8")
 SW = (ROOT / "audiobook" / "static" / "sw.js").read_text(encoding="utf-8")
 MANIFEST = json.loads((ROOT / "audiobook" / "static" / "manifest.webmanifest").read_text(encoding="utf-8"))
+VOICE_SAMPLES = (ROOT / "audiobook" / "static" / "voice-samples.html").read_text(encoding="utf-8")
 
 
 def test_offline_copy_is_device_specific():
@@ -102,11 +103,27 @@ def test_chinese_voice_selector_posts_backend_field():
         "voice_zh: 'zf_xiaobei'",
         "Lina — Mandarin female voice",
         "Mei — Gentle Mandarin voice",
+        "Xiaoxiao — Bright Mandarin voice",
         "Jun — Mandarin male voice",
+        "Yunxi — Young Mandarin male voice",
+        "Hear Chinese voice samples",
+        "/voice-samples.html",
         "fd.append('voice_zh', this.jobForm.voice_zh)",
         "chineseVoiceLabel(jobForm.voice_zh)",
     ]:
         assert text in INDEX
+
+
+def test_chinese_voice_samples_page_lists_all_voice_assets():
+    for text in [
+        "Chinese Voice Samples",
+        "/samples/zh-zf_xiaobei.mp3",
+        "/samples/zh-zf_xiaoni.mp3",
+        "/samples/zh-zf_xiaoxiao.mp3",
+        "/samples/zh-zm_yunjian.mp3",
+        "/samples/zh-zm_yunxi.mp3",
+    ]:
+        assert text in VOICE_SAMPLES
 
 
 def test_library_is_modern_saas_copy():
@@ -412,6 +429,7 @@ if __name__ == "__main__":
         test_create_flow_is_tabbed_and_plain_language,
         test_narration_settings_are_consumer_friendly,
         test_chinese_voice_selector_posts_backend_field,
+        test_chinese_voice_samples_page_lists_all_voice_assets,
         test_library_is_modern_saas_copy,
         test_premium_shell_uses_one_design_system,
         test_navbar_is_refined_command_bar,

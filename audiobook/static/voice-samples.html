@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chinese Voice Samples</title>
+    <style>
+        :root {
+            --bg: #F6F0E4;
+            --surface: #FFFDF8;
+            --text: #211A1D;
+            --muted: #6F6A63;
+            --border: #D8CCB9;
+            --primary: #24191D;
+            --accent: #6B7C45;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: var(--bg);
+            color: var(--text);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+        main {
+            width: min(760px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 56px 0;
+        }
+        a { color: inherit; }
+        .back {
+            display: inline-flex;
+            margin-bottom: 32px;
+            color: var(--muted);
+            font-size: 14px;
+            text-decoration: none;
+        }
+        h1 {
+            margin: 0;
+            font-size: clamp(34px, 7vw, 56px);
+            line-height: 0.96;
+            letter-spacing: 0;
+        }
+        .intro {
+            max-width: 620px;
+            margin: 18px 0 32px;
+            color: var(--muted);
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        .sample-list {
+            display: grid;
+            gap: 14px;
+        }
+        .sample {
+            padding: 18px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: var(--surface);
+            box-shadow: 0 10px 28px rgba(33, 26, 29, 0.06);
+        }
+        .sample header {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+        .sample h2 {
+            margin: 0;
+            font-size: 17px;
+        }
+        .sample code {
+            color: var(--accent);
+            font-size: 13px;
+        }
+        audio {
+            width: 100%;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <a class="back" href="/">Back to Audiobook</a>
+        <h1>Chinese Voice Samples</h1>
+        <p class="intro">Each clip reads the same Mandarin sample: 你好，我是中文旁白。这里是一段试听，用来选择有声书的声音。</p>
+
+        <section class="sample-list" aria-label="Chinese voice samples">
+            <article class="sample">
+                <header><h2>Lina — Mandarin female voice</h2><code>zf_xiaobei</code></header>
+                <audio controls preload="metadata" src="/samples/zh-zf_xiaobei.mp3"></audio>
+            </article>
+            <article class="sample">
+                <header><h2>Mei — Gentle Mandarin voice</h2><code>zf_xiaoni</code></header>
+                <audio controls preload="metadata" src="/samples/zh-zf_xiaoni.mp3"></audio>
+            </article>
+            <article class="sample">
+                <header><h2>Xiaoxiao — Bright Mandarin voice</h2><code>zf_xiaoxiao</code></header>
+                <audio controls preload="metadata" src="/samples/zh-zf_xiaoxiao.mp3"></audio>
+            </article>
+            <article class="sample">
+                <header><h2>Jun — Mandarin male voice</h2><code>zm_yunjian</code></header>
+                <audio controls preload="metadata" src="/samples/zh-zm_yunjian.mp3"></audio>
+            </article>
+            <article class="sample">
+                <header><h2>Yunxi — Young Mandarin male voice</h2><code>zm_yunxi</code></header>
+                <audio controls preload="metadata" src="/samples/zh-zm_yunxi.mp3"></audio>
+            </article>
+        </section>
+    </main>
+</body>
+</html>
