@@ -220,6 +220,27 @@ def test_frontend_redirects_loopback_ip_to_firebase_safe_localhost():
     assert "window.location.replace" in INDEX
 
 
+def test_upload_submit_uses_reactive_file_state():
+    assert "selectedFile: null" in INDEX
+    assert "this.selectedFile = file" in INDEX
+    assert "if (this.inputMethod === 'upload') return !!this.selectedFile;" in INDEX
+    assert "fd.append('file', this.selectedFile)" in INDEX
+
+
+def test_selected_upload_filename_is_mobile_safe():
+    assert "selected-file-name" in INDEX
+    assert "overflow-wrap: anywhere" in INDEX
+    assert "word-break: break-word" in INDEX
+
+
+def test_pwa_install_guidance_is_available_without_modal():
+    assert "install-card" in INDEX
+    assert "Add to Home Screen" in INDEX
+    assert "For the most reliable offline listening" in INDEX
+    assert "beforeinstallprompt" in INDEX
+    assert "installApp()" in INDEX
+
+
 def test_service_worker_uses_network_first_for_navigation_shell():
     assert "e.request.mode === 'navigate'" in SW
     assert "fetch(e.request)" in SW

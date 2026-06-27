@@ -204,6 +204,23 @@
             border: 1px solid var(--color-border); border-radius: var(--radius-lg);
             background: #fff; padding: 18px;
         }
+        .selected-file-details { min-width: 0; flex: 1 1 auto; }
+        .selected-file-name {
+            max-width: 100%;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+        .install-card {
+            display: flex; align-items: center; justify-content: space-between; gap: 16px;
+            border: 1px solid rgba(79,95,58,.20); border-radius: var(--radius-lg);
+            background: linear-gradient(135deg, rgba(255,252,247,.92), rgba(231,221,204,.48));
+            padding: 16px 18px; box-shadow: var(--shadow-soft);
+        }
+        .install-card-icon {
+            width: 38px; height: 38px; border-radius: 12px;
+            background: rgba(79,95,58,.10); color: var(--color-accent);
+            display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
+        }
         .settings-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, .7fr); gap: 20px; }
         .settings-summary {
             width: 100%; min-height: 48px; display: none; align-items: center; justify-content: space-between; gap: 14px;
@@ -443,6 +460,8 @@
             .settings-grid { grid-template-columns: 1fr; }
             .selected-file { align-items: flex-start; flex-direction: column; padding: 14px; }
             .selected-file-actions { width: 100%; display: grid; grid-template-columns: 1fr 1fr; }
+            .install-card { align-items: flex-start; flex-direction: column; padding: 14px; }
+            .install-card-actions { display: grid; grid-template-columns: 1fr; width: 100%; }
             .player-control-panel { border-radius: 16px; padding: 14px; }
             .player-primary-control { width: 56px; height: 56px; }
             .player-header { grid-template-columns: 88px minmax(0,1fr) 24px; }
@@ -594,9 +613,9 @@
                                         <p class="mt-2 text-sm text-inkLight">Supported: PDF, EPUB, TXT, DOCX</p>
                                     </div>
                                     <div x-show="selectedFileName" class="selected-file" style="display:none">
-                                        <div>
+                                        <div class="selected-file-details">
                                             <p class="text-sm font-semibold text-accent mb-1">Document uploaded</p>
-                                            <p class="text-base font-semibold text-ink" x-text="selectedFileName"></p>
+                                            <p class="selected-file-name text-base font-semibold text-ink" x-text="selectedFileName"></p>
                                             <p class="text-sm text-inkLight" x-text="selectedFileSize ? formatBytes(selectedFileSize) : ''"></p>
                                         </div>
                                         <div class="selected-file-actions flex gap-2">
@@ -692,6 +711,26 @@
                             <span x-text="submitting ? 'Creating audiobook...' : 'Create Audiobook'"></span>
                         </button>
                     </div>
+
+                    <div x-show="showInstallCard()" class="install-card" style="display:none">
+                        <div class="flex items-start gap-3 min-w-0">
+                            <span class="install-card-icon" aria-hidden="true">
+                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v10m0-10 4 4m-4-4-4 4"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 14v4a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-4"/>
+                                </svg>
+                            </span>
+                            <div class="min-w-0">
+                                <p class="text-sm font-semibold text-ink">Add to Home Screen</p>
+                                <p class="mt-1 text-sm text-inkLight">For the most reliable offline listening, install this app on your device.</p>
+                                <p x-show="isIosDevice()" class="mt-1 text-xs text-inkLight">On iPhone, use Safari Share, then Add to Home Screen.</p>
+                            </div>
+                        </div>
+                        <div class="install-card-actions flex gap-2">
+                            <button type="button" x-show="canPromptInstall()" @click="installApp()" class="card-action primary px-4">Add App</button>
+                            <button type="button" @click="dismissInstallCard()" class="card-action secondary px-4">Not now</button>
+                        </div>
+                    </div>
                 </form>
             </section>
         </div>
@@ -714,6 +753,26 @@
                     </svg>
                     <label for="librarySearch" class="sr-only">Search library</label>
                     <input id="librarySearch" type="search" x-model="searchQuery" placeholder="Search audiobooks" class="field-control search-input">
+                </div>
+
+                <div x-show="showInstallCard()" class="install-card mb-8" style="display:none">
+                    <div class="flex items-start gap-3 min-w-0">
+                        <span class="install-card-icon" aria-hidden="true">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v10m0-10 4 4m-4-4-4 4"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 14v4a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-4"/>
+                            </svg>
+                        </span>
+                        <div class="min-w-0">
+                            <p class="text-sm font-semibold text-ink">Add to Home Screen</p>
+                            <p class="mt-1 text-sm text-inkLight">For the most reliable offline listening, install this app on your device.</p>
+                            <p x-show="isIosDevice()" class="mt-1 text-xs text-inkLight">On iPhone, use Safari Share, then Add to Home Screen.</p>
+                        </div>
+                    </div>
+                    <div class="install-card-actions flex gap-2">
+                        <button type="button" x-show="canPromptInstall()" @click="installApp()" class="card-action primary px-4">Add App</button>
+                        <button type="button" @click="dismissInstallCard()" class="card-action secondary px-4">Not now</button>
+                    </div>
                 </div>
 
                 <div x-show="jobs.length > 0" class="library-grid">
@@ -1061,6 +1120,7 @@
                 uploadDrag: false,
                 selectedFileName: '',
                 selectedFileSize: 0,
+                selectedFile: null,
                 searchQuery: '',
                 settingsCollapsed: window.matchMedia('(max-width: 720px)').matches,
                 jobForm: { url: '', text: '', voice: 'af_heart', speed: 1.0, normalize: true },
@@ -1084,12 +1144,23 @@
                 offlineSavingTotal: 0,
                 toast: null,
                 toastTimer: null,
+                installPromptEvent: null,
+                installDismissed: localStorage.getItem('audiobook_install_dismissed') === '1',
 
                 async init() {
                     this.playerSpeed = parseFloat(localStorage.getItem('player_speed')) || 1.0;
                     window.addEventListener('pagehide', () => this.savePlaybackPosition());
                     document.addEventListener('visibilitychange', () => {
                         if (document.visibilityState === 'hidden') this.savePlaybackPosition();
+                    });
+                    window.addEventListener('beforeinstallprompt', event => {
+                        event.preventDefault();
+                        this.installPromptEvent = event;
+                    });
+                    window.addEventListener('appinstalled', () => {
+                        this.installPromptEvent = null;
+                        this.installDismissed = true;
+                        localStorage.setItem('audiobook_install_dismissed', '1');
                     });
                     
                     try {
@@ -1290,27 +1361,69 @@
                     if (!file) {
                         this.selectedFileName = '';
                         this.selectedFileSize = 0;
+                        this.selectedFile = null;
                         return;
                     }
+                    this.selectedFile = file;
                     this.selectedFileName = file.name;
                     this.selectedFileSize = file.size;
                 },
 
                 replaceSelectedFile() {
-                    if (this.$refs.fileInput) this.$refs.fileInput.click();
+                    if (this.$refs.fileInput) {
+                        this.$refs.fileInput.value = '';
+                        this.$refs.fileInput.click();
+                    }
                 },
 
                 clearSelectedFile() {
                     if (this.$refs.fileInput) this.$refs.fileInput.value = '';
                     this.selectedFileName = '';
                     this.selectedFileSize = 0;
+                    this.selectedFile = null;
+                },
+
+                isInstalled() {
+                    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+                },
+
+                isIosDevice() {
+                    return /iphone|ipad|ipod/i.test(window.navigator.userAgent || '') && !this.isInstalled();
+                },
+
+                canPromptInstall() {
+                    return !!this.installPromptEvent;
+                },
+
+                showInstallCard() {
+                    return !this.installDismissed && !this.isInstalled() && (this.canPromptInstall() || this.isIosDevice());
+                },
+
+                dismissInstallCard() {
+                    this.installDismissed = true;
+                    localStorage.setItem('audiobook_install_dismissed', '1');
+                },
+
+                async installApp() {
+                    if (!this.installPromptEvent) {
+                        this.showToast('Add to Home Screen', 'On iPhone, use Safari Share, then Add to Home Screen.', 'Best for offline listening');
+                        return;
+                    }
+                    const promptEvent = this.installPromptEvent;
+                    this.installPromptEvent = null;
+                    await promptEvent.prompt();
+                    const choice = await promptEvent.userChoice;
+                    if (choice && choice.outcome === 'accepted') {
+                        this.installDismissed = true;
+                        localStorage.setItem('audiobook_install_dismissed', '1');
+                    }
                 },
 
                 canSubmit() {
                     if (this.inputMethod === 'url') return !!this.jobForm.url.trim();
                     if (this.inputMethod === 'text') return !!this.jobForm.text.trim();
-                    const fInput = this.$refs.fileInput || document.getElementById('fileInput');
-                    return !!(fInput && fInput.files && fInput.files.length > 0);
+                    if (this.inputMethod === 'upload') return !!this.selectedFile;
+                    return false;
                 },
 
                 estimateTextDuration(text) {
@@ -1331,8 +1444,7 @@
                     if(this.inputMethod === 'url') fd.append('url', this.jobForm.url.trim());
                     if(this.inputMethod === 'text') fd.append('text', this.jobForm.text.trim());
                     if(this.inputMethod === 'upload') {
-                        const fInput = this.$refs.fileInput || document.getElementById('fileInput');
-                        if(fInput && fInput.files.length > 0) fd.append('file', fInput.files[0]);
+                        if(this.selectedFile) fd.append('file', this.selectedFile);
                     }
                     
                     fd.append('voice', this.jobForm.voice);
