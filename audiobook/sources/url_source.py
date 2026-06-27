@@ -135,18 +135,28 @@ def _response_encoding(response, body: bytes) -> str:
     content_type = response.headers.get("Content-Type") or response.headers.get("content-type") or ""
     header_match = HEADER_CHARSET_RE.search(content_type)
     if header_match:
-        return header_match.group(1)
+        return _normalize_encoding(header_match.group(1))
 
     meta_match = META_CHARSET_RE.search(body[:4096])
     if meta_match:
-        return meta_match.group(1).decode("ascii", errors="ignore") or "utf-8"
+        return _normalize_encoding(meta_match.group(1).decode("ascii", errors="ignore")) or "utf-8"
 
     encoding = getattr(response, "encoding", None)
     if encoding and encoding.lower() != "iso-8859-1":
-        return encoding
+        return _normalize_encoding(encoding)
 
     apparent = getattr(response, "apparent_encoding", None)
-    return apparent or encoding or "utf-8"
+    return _normalize_encoding(apparent or encoding or "utf-8")
+
+
+def _normalize_encoding(encoding: str | None) -> str:
+    if not encoding:
+        return ""
+    cleaned = encoding.strip()
+    compact = cleaned.lower().replace("_", "-")
+    if compact in {"gb2312", "gb-2312", "gbk"}:
+        return "gb18030"
+    return cleaned
 
 
 class UrlSource:

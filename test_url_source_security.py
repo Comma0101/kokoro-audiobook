@@ -134,9 +134,9 @@ def test_safe_fetch_decodes_gb2312_article_html():
     html = """
         <html>
           <head><meta http-equiv="Content-Type" content="text/html; charset=gb2312"></head>
-          <body><article><h1>红楼梦</h1><p>甄士隐梦幻识通灵。</p></article></body>
+          <body><article><h1>红楼梦</h1><p>甄士隐梦幻识通灵。古字𠀀。</p></article></body>
         </html>
-    """.encode("gb2312")
+    """.encode("gb18030")
     session = FakeSession([
         FakeResponse(
             headers={"Content-Type": "text/html"},
@@ -150,7 +150,9 @@ def test_safe_fetch_decodes_gb2312_article_html():
 
     assert "红楼梦" in text
     assert "甄士隐梦幻识通灵" in text
+    assert "古字𠀀" in text
     assert "ºìÂ¥" not in text
+    assert "�" not in text
 
 
 if __name__ == "__main__":
